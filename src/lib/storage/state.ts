@@ -1,11 +1,14 @@
-import type { MirrorState } from "@/types/session";
+import type { MirrorState, SessionCoachMetrics, SessionSummary, VisualObservations } from "@/types/session";
 import type { AnalysisHistoryItem, AnalysisResult, ProfileColor, SeriesPoint, TranscriptSegment } from "@/types/coach";
+import type { FocusSelection, TranscriptMetrics } from "@/types/review";
+import { createMetricOnlySummary, upsertSessionSummary } from "../history";
+import { createEmptyReviewState } from "../review";
 
 export const STATE_KEY = "mirror-state-v1";
 export const STATE_EVENT = "mirror-state-change";
 
 export const INITIAL_STATE: MirrorState = {
-  version: 2,
+  version: 3,
   goals: [],
   diagnostic: {
     recordedAt: null,
@@ -15,16 +18,7 @@ export const INITIAL_STATE: MirrorState = {
     transcriptSegments: [],
     hasRecording: false,
   },
-  review: {
-    completed: { audio: false, visual: false, transcript: false },
-    ratings: {},
-    behaviorTags: [],
-    behaviorOther: "",
-    noBehaviorNoticed: false,
-    whatWorked: "",
-    focus: null,
-    reflection: "",
-  },
+  review: createEmptyReviewState(),
   gym: {
     streak: 0,
     drillCount: 0,
@@ -40,6 +34,7 @@ export const INITIAL_STATE: MirrorState = {
     eslMode: false,
     profiler: { answers: {}, result: null },
   },
+  history: [],
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -146,18 +141,77 @@ function focusCategory(value: unknown): import("@/types/review").FocusCategory |
     : null;
 }
 
+function hydrateFocus(value: unknown): FocusSelection | null {
+  if (!isRecord(value)) return null;
+  const category = focusCategory(value.category);
+  const action = typeof value.action === "string" ? value.action.trim() : "";
+  const customCategory = typeof value.customCategory === "string" ? value.customCategory.trim() : "";
+  return category && action && (category !== "custom" || customCategory)
+    ? { category, customCategory, action }
+    : null;
+}
+
+function hydrateTranscriptMetrics(value: unknown): TranscriptMetrics | null {
+  if (!isRecord(value)) return null;
+  return {
+    words: Math.max(0, Math.round(numberOr(value.words))),
+    wpm: Math.max(0, Math.round(numberOr(value.wpm))),
+    nonWords: Math.max(0, Math.round(numberOr(value.nonWords))),
+    fillers: Math.max(0, Math.round(numberOr(value.fillers))),
+  };
+}
+
+function hydrateVisualObservations(value: unknown): VisualObservations | null {
+  if (!isRecord(value)) return null;
+  return {
+    tags: strings(value.tags, 20),
+    other: typeof value.other === "string" ? value.other.trim() : "",
+    noneNoticed: value.noneNoticed === true,
+  };
+}
+
+function hydrateSessionCoachMetrics(value: unknown): SessionCoachMetrics | null {
+  if (!isRecord(value) || !Number.isFinite(value.analyzedAt)) return null;
+  return {
+    analyzedAt: numberOr(value.analyzedAt),
+    wpm: Math.max(0, Math.round(numberOr(value.wpm))),
+    overallRms: Math.max(0, numberOr(value.overallRms)),
+    pitchStdDevHz: nullableNumber(value.pitchStdDevHz),
+    pauseSeconds: Math.max(0, numberOr(value.pauseSeconds)),
+    tonalityRating: nullableNumber(value.tonalityRating),
+  };
+}
+
+function hydrateSessionHistory(value: unknown): SessionSummary[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-100).reduce<SessionSummary[]>((history, item) => {
+    if (!isRecord(item) || !Number.isFinite(item.recordedAt)) return history;
+    const summary: SessionSummary = {
+      recordedAt: numberOr(item.recordedAt),
+      durationSeconds: nullableNumber(item.durationSeconds),
+      goals: strings(item.goals, 5),
+      reviewCompletedAt: nullableNumber(item.reviewCompletedAt),
+      whatWorked: typeof item.whatWorked === "string" ? item.whatWorked.trim() : "",
+      focus: hydrateFocus(item.focus),
+      transcriptMetrics: hydrateTranscriptMetrics(item.transcriptMetrics),
+      visualObservations: hydrateVisualObservations(item.visualObservations),
+      coachMetrics: hydrateSessionCoachMetrics(item.coachMetrics),
+      source: item.source === "coach-metrics" ? "coach-metrics" : "reviewed-session",
+    };
+    return upsertSessionSummary(history, summary);
+  }, []);
+}
+
 export function hydrateState(value: unknown): MirrorState {
   if (!isRecord(value)) return INITIAL_STATE;
   const diagnostic = isRecord(value.diagnostic) ? value.diagnostic : {};
   const review = isRecord(value.review) ? value.review : {};
   const completed = isRecord(review.completed) ? review.completed : {};
-  const focus = isRecord(review.focus) ? review.focus : {};
-  const hydratedFocusCategory = focusCategory(focus.category);
-  const focusAction = typeof focus.action === "string" ? focus.action.trim() : "";
-  const customCategory = typeof focus.customCategory === "string" ? focus.customCategory.trim() : "";
+  const hydratedFocus = hydrateFocus(review.focus);
   const gym = isRecord(value.gym) ? value.gym : {};
   const framework = isRecord(gym.framework) ? gym.framework : {};
   const coach = isRecord(value.coach) ? value.coach : {};
+  const coachHistory = hydrateHistory(coach.history);
   const calibration = isRecord(coach.calibration) ? coach.calibration : {};
   const profiler = isRecord(coach.profiler) ? coach.profiler : {};
   const ratings = isRecord(review.ratings)
@@ -168,11 +222,20 @@ export function hydrateState(value: unknown): MirrorState {
       )
     : {};
 
+  const recordedAt = finiteNumber(diagnostic.recordedAt);
+  const hydratedHistory = hydrateSessionHistory(value.history);
+  const history = coachHistory.reduce(
+    (summaries, item) => item.sourceRecordedAt === recordedAt || summaries.some((summary) => summary.recordedAt === item.sourceRecordedAt)
+      ? summaries
+      : upsertSessionSummary(summaries, createMetricOnlySummary(item)),
+    hydratedHistory,
+  );
+
   return {
-    version: 2,
+    version: 3,
     goals: strings(value.goals, 5),
     diagnostic: {
-      recordedAt: finiteNumber(diagnostic.recordedAt),
+      recordedAt,
       durationSeconds: finiteNumber(diagnostic.durationSeconds),
       lockedUntil: finiteNumber(diagnostic.lockedUntil),
       transcript: typeof diagnostic.transcript === "string" ? diagnostic.transcript : "",
@@ -180,6 +243,7 @@ export function hydrateState(value: unknown): MirrorState {
       hasRecording: diagnostic.hasRecording === true,
     },
     review: {
+      completedAt: nullableNumber(review.completedAt),
       completed: {
         audio: completed.audio === true,
         visual: completed.visual === true,
@@ -194,9 +258,7 @@ export function hydrateState(value: unknown): MirrorState {
         : typeof review.reflection === "string"
           ? review.reflection
           : "",
-      focus: hydratedFocusCategory && focusAction && (hydratedFocusCategory !== "custom" || customCategory)
-        ? { category: hydratedFocusCategory, customCategory, action: focusAction }
-        : null,
+      focus: hydratedFocus,
       reflection: typeof review.reflection === "string" ? review.reflection : "",
     },
     gym: {
@@ -219,7 +281,7 @@ export function hydrateState(value: unknown): MirrorState {
         calibratedAt: nullableNumber(calibration.calibratedAt),
       },
       current: hydrateAnalysis(coach.current),
-      history: hydrateHistory(coach.history),
+      history: coachHistory,
       tonalityRating: nullableNumber(coach.tonalityRating),
       eslMode: coach.eslMode === true,
       profiler: {
@@ -232,6 +294,7 @@ export function hydrateState(value: unknown): MirrorState {
         result: profileColor(profiler.result),
       },
     },
+    history,
   };
 }
 

@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { buildTrainingPlan, type FoundationScore } from "../src/lib/coach";
 import { findTenseFlags } from "../src/lib/esl";
 import { hydrateState } from "../src/lib/storage/state";
+import { beginNextCycle, createCurrentSessionSummary } from "../src/lib/history";
 import { getTranscriptMetrics } from "../src/lib/transcript";
 import {
   canOpenReviewStep,
@@ -78,7 +79,7 @@ test("focus suggestions are derived from the completed review evidence", () => {
   }), ["voice", "structure"]);
 });
 
-test("legacy and malformed state hydrates into bounded version-two state", () => {
+test("legacy and malformed state hydrates into bounded version-three state", () => {
   const state = hydrateState({
     version: 1,
     goals: ["clear", "warm", "credible", "calm", "concise", "ignored"],
@@ -86,7 +87,7 @@ test("legacy and malformed state hydrates into bounded version-two state", () =>
     review: { ratings: { clear: 99 }, completed: { audio: true } },
     gym: { streak: -4 },
   });
-  assert.equal(state.version, 2);
+  assert.equal(state.version, 3);
   assert.deepEqual(state.goals, ["clear", "warm", "credible", "calm", "concise"]);
   assert.equal(state.diagnostic.durationSeconds, null);
   assert.equal(state.review.ratings.clear, 5);
@@ -95,6 +96,7 @@ test("legacy and malformed state hydrates into bounded version-two state", () =>
   assert.equal(state.review.focus, null);
   assert.equal(state.gym.streak, 0);
   assert.equal(state.coach.current, null);
+  assert.deepEqual(state.history, []);
 });
 
 test("a valid single focus survives hydration while incomplete focus data is rejected", () => {
@@ -112,6 +114,85 @@ test("a valid single focus survives hydration while incomplete focus data is rej
     action: "Pause after each main idea.",
   });
   assert.equal(hydrateState({ review: { focus: { category: "custom", action: "Look up more often." } } }).review.focus, null);
+});
+
+test("version-two Coach history migrates to honest metric-only summaries", () => {
+  const state = hydrateState({
+    version: 2,
+    diagnostic: { recordedAt: 200, hasRecording: true },
+    coach: {
+      history: [
+        { sourceRecordedAt: 100, analyzedAt: 110, wpm: 144, overallRms: 0.12, pitchStdDevHz: 18, pauseSeconds: 7, tonalityRating: 4 },
+        { sourceRecordedAt: 200, analyzedAt: 210, wpm: 151, overallRms: 0.14, pitchStdDevHz: 20, pauseSeconds: 5, tonalityRating: 3 },
+      ],
+    },
+  });
+  assert.equal(state.history.length, 1);
+  assert.equal(state.history[0].recordedAt, 100);
+  assert.equal(state.history[0].source, "coach-metrics");
+  assert.equal(state.history[0].focus, null);
+  assert.equal(state.history[0].transcriptMetrics, null);
+  assert.equal(state.history[0].coachMetrics?.wpm, 144);
+});
+
+test("a completed cycle archives one summary and starting it twice cannot duplicate it", () => {
+  const state = hydrateState({
+    version: 3,
+    goals: ["Clear", "Warm"],
+    diagnostic: {
+      recordedAt: 1_700_000_000_000,
+      durationSeconds: 60,
+      lockedUntil: 0,
+      transcript: Array.from({ length: 120 }, () => "word").join(" "),
+      hasRecording: true,
+    },
+    review: {
+      completedAt: 1_700_000_100_000,
+      completed: { audio: true, visual: true, transcript: true },
+      behaviorTags: ["Looking away"],
+      whatWorked: "The opening was direct.",
+      focus: { category: "pause", customCategory: "", action: "Pause after each main idea." },
+    },
+  });
+  const summary = createCurrentSessionSummary(state);
+  assert.ok(summary);
+  assert.equal(summary.recordedAt, 1_700_000_000_000);
+  assert.equal(summary.transcriptMetrics?.wpm, 120);
+  assert.equal("video" in summary, false);
+
+  const first = beginNextCycle(state);
+  assert.equal(first.archived, true);
+  assert.equal(first.state.history.length, 1);
+  assert.equal(first.state.diagnostic.hasRecording, false);
+  assert.equal(first.state.review.focus, null);
+  const second = beginNextCycle(first.state);
+  assert.equal(second.archived, false);
+  assert.equal(second.state.history.length, 1);
+});
+
+test("an incomplete replacement clears the current cycle without inventing a history entry", () => {
+  const state = hydrateState({
+    diagnostic: { recordedAt: 44, durationSeconds: 30, hasRecording: true },
+    review: { completed: { audio: true, visual: false, transcript: false } },
+  });
+  const next = beginNextCycle(state);
+  assert.equal(next.archived, false);
+  assert.deepEqual(next.state.history, []);
+  assert.equal(next.state.diagnostic.recordedAt, null);
+});
+
+test("multiple summaries survive hydration and duplicate recording identities collapse", () => {
+  const state = hydrateState({
+    version: 3,
+    history: [
+      { recordedAt: 10, durationSeconds: 60, goals: ["Clear"], source: "reviewed-session" },
+      { recordedAt: 20, durationSeconds: 90, goals: ["Warm"], source: "reviewed-session" },
+      { recordedAt: 10, durationSeconds: 75, goals: ["Concise"], source: "reviewed-session" },
+    ],
+  });
+  assert.deepEqual(state.history.map((item) => item.recordedAt), [20, 10]);
+  assert.equal(state.history[1].durationSeconds, 75);
+  assert.deepEqual(state.history[1].goals, ["Concise"]);
 });
 
 test("the training plan ranks measurable weak foundations before missing metrics", () => {

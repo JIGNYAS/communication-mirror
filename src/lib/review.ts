@@ -4,7 +4,22 @@ import type {
   ReviewCompletion,
   ReviewStep,
   TranscriptMetrics,
+  ReviewState,
 } from "@/types/review";
+
+export function createEmptyReviewState(): ReviewState {
+  return {
+    completedAt: null,
+    completed: { audio: false, visual: false, transcript: false },
+    ratings: {},
+    behaviorTags: [],
+    behaviorOther: "",
+    noBehaviorNoticed: false,
+    whatWorked: "",
+    focus: null,
+    reflection: "",
+  };
+}
 
 export const FOCUS_CATEGORIES: Array<{ id: FocusCategory; label: string; action: string }> = [
   { id: "pace", label: "Pace", action: "Slow down enough to finish each sentence." },

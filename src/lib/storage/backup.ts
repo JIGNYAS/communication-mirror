@@ -4,7 +4,7 @@ import type { MirrorState } from "@/types/session";
 
 interface BackupEnvelope {
   product: "The Communication Mirror";
-  version: 2;
+  version: 3;
   exportedAt: string;
   state: MirrorState;
 }
@@ -21,7 +21,7 @@ function downloadBlob(blob: Blob, filename: string): void {
 export function exportBackup(state: MirrorState): void {
   const backup: BackupEnvelope = {
     product: "The Communication Mirror",
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     state,
   };

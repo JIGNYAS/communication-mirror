@@ -15,6 +15,7 @@ export interface FocusSelection {
 }
 
 export interface ReviewState {
+  completedAt: number | null;
   completed: ReviewCompletion;
   ratings: Record<string, number>;
   behaviorTags: string[];

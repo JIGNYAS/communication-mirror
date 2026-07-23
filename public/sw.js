@@ -1,5 +1,5 @@
-const CACHE = "mirror-shell-v2";
-const SHELL = ["/", "/diagnostic", "/review", "/coach", "/calibration", "/gym", "/manifest.webmanifest", "/mirror-icon.svg"];
+const CACHE = "mirror-shell-v3";
+const SHELL = ["/", "/diagnostic", "/review", "/history", "/coach", "/calibration", "/gym", "/more", "/manifest.webmanifest", "/mirror-icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(precacheShell());

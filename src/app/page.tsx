@@ -49,9 +49,9 @@ function getHomeAction(hasRecording: boolean, locked: boolean, completed: Review
   }
   return {
     eyebrow: "Review complete",
-    label: "Practice your one change",
-    href: "/gym",
-    note: focus?.action ?? "Carry one specific observation into a short practice rep.",
+    label: "Start next weekly recording",
+    href: "/diagnostic",
+    note: focus?.action ?? "Carry one specific observation into the next take.",
     step: 3,
   };
 }

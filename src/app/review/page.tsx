@@ -192,6 +192,7 @@ export default function ReviewPage() {
       ...current,
       review: {
         ...current.review,
+        completedAt: current.review.completedAt ?? Date.now(),
         focus: {
           category: focusCategory,
           customCategory: focusCategory === "custom" ? customCategory.trim() : "",

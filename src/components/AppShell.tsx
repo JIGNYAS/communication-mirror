@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid, ShieldCheck } from "lucide-react";
+import { History, Home, LayoutGrid, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 
-type ActiveRoute = "home" | "diagnostic" | "review" | "coach" | "gym" | "more";
+type ActiveRoute = "home" | "diagnostic" | "review" | "coach" | "gym" | "history" | "more";
 
 interface AppShellProps {
   active: ActiveRoute;
@@ -26,6 +26,8 @@ export function AppShell({ active, eyebrow, title, children, aside, tone = "dark
         <div className="shell-actions">
           <div className="privacy-seal"><ShieldCheck size={16} /><span>STAYS ON THIS DEVICE</span></div>
           <nav className="primary-nav" aria-label="Main navigation">
+            <Link className={active === "home" ? "active" : ""} href="/"><Home size={16} /> Home</Link>
+            <Link className={active === "history" ? "active" : ""} href="/history"><History size={16} /> History</Link>
             <Link className={active === "more" ? "active" : ""} href="/more"><LayoutGrid size={16} /> More</Link>
           </nav>
         </div>

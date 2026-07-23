@@ -11,6 +11,8 @@ import { requestCameraAndMic } from "@/lib/media/recorder";
 import { canTranscribe, startLiveTranscription } from "@/lib/media/transcription";
 import { deleteRecording, putRecording } from "@/lib/storage/db";
 import { normalizeIntentions } from "@/lib/intentions";
+import { beginNextCycle } from "@/lib/history";
+import { createEmptyReviewState, isReviewComplete } from "@/lib/review";
 import type { TranscriptSegment } from "@/types/coach";
 
 type RecorderPhase = "setup" | "ready" | "recording" | "saving" | "locked";
@@ -63,7 +65,7 @@ export default function DiagnosticPage() {
       update((current) => ({
         ...current,
         diagnostic: { recordedAt: now, durationSeconds: capture.durationSeconds, lockedUntil, transcript: transcriptRef.current, transcriptSegments: transcriptSegmentsRef.current, hasRecording: true },
-        review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, whatWorked: "", focus: null, reflection: "" },
+        review: createEmptyReviewState(),
         coach: { ...current.coach, current: null },
       }));
       setPhase("locked");
@@ -176,7 +178,7 @@ export default function DiagnosticPage() {
       update((current) => ({
         ...current,
         diagnostic: { recordedAt: recoveryDraft.startedAt, durationSeconds: recoveryDraft.durationSeconds, lockedUntil, transcript: "", transcriptSegments: [], hasRecording: true },
-        review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, whatWorked: "", focus: null, reflection: "" },
+        review: createEmptyReviewState(),
         coach: { ...current.coach, current: null },
       }));
       setPhase("locked");
@@ -186,11 +188,19 @@ export default function DiagnosticPage() {
   }
 
   async function startFresh(): Promise<void> {
-    if (!window.confirm("Delete the current baseline and its review so you can record a fresh take?")) return;
-    await Promise.all([deleteRecording(), discardRecoveryDraft()]);
-    update((current) => ({ ...current, diagnostic: { recordedAt: null, durationSeconds: null, lockedUntil: null, transcript: "", transcriptSegments: [], hasRecording: false }, review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, whatWorked: "", focus: null, reflection: "" }, coach: { ...current.coach, current: null } }));
-    setLiveTranscript("");
-    setPhase("setup");
+    const complete = isReviewComplete(state.review.completed, state.review.focus);
+    const message = complete
+      ? "Start the next weekly recording? Mirror will keep a summary of this completed review in History, then permanently replace the current video. The old video will not remain available."
+      : "This weekly cycle is not complete. Starting again will permanently delete the current video and discard its unfinished review without adding a History summary. Continue?";
+    if (!window.confirm(message)) return;
+    try {
+      await Promise.all([deleteRecording(), discardRecoveryDraft()]);
+      update((current) => beginNextCycle(current).state);
+      setLiveTranscript("");
+      setPhase("setup");
+    } catch {
+      setError("Mirror could not clear the current video. Nothing was replaced; try again.");
+    }
   }
 
   function downloadBlob(blob: Blob, filename: string): void {
@@ -216,7 +226,7 @@ export default function DiagnosticPage() {
           <p>Right after a recording, you remember every hesitation. Tomorrow, you can meet the speaker on screen with more distance and better evidence.</p>
           <div className="button-row centered">
             <Link className="button primary" href="/review">See the countdown <ArrowRight size={18} /></Link>
-            <button className="button secondary" onClick={() => void startFresh()}><RefreshCcw size={17} /> Start a fresh baseline</button>
+            <button className="button secondary" onClick={() => void startFresh()}><RefreshCcw size={17} /> Start next weekly recording</button>
           </div>
         </section>
       </AppShell>
