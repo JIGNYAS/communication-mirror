@@ -1001,3 +1001,182 @@ textarea.tall { min-height: 220px; }
   .more-tool-row { padding: 14px 16px; }
   .settings-divider { margin-top: 28px; }
 }
+
+/* Slice 6: one visual system, accessible controls, and regression hardening */
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 12px;
+  z-index: 100;
+  padding: 11px 15px;
+  border-radius: 10px;
+  color: white;
+  background: var(--mirror-deep);
+  transform: translateY(-150%);
+}
+.skip-link:focus { transform: translateY(0); }
+.light-shell :focus-visible { outline-color: #225b42; outline-width: 3px; }
+.light-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.light-shell select { min-height: 44px; }
+.icon-button { width: 44px; height: 44px; }
+.rating-table button, .tonality-rating button { min-width: 44px; min-height: 44px; height: 44px; }
+.tag-list button, .suggestion-row button { min-height: 44px; }
+.check-line input, .switch-line input, .more-preferences input { width: 20px; height: 20px; }
+
+.light-shell .coach-privacy {
+  color: #426653;
+  border-color: #b9ccbf;
+  border-radius: 999px;
+  background: #f4faf5;
+}
+.light-shell .coach-tabs {
+  border-color: var(--mirror-line);
+  border-radius: 16px;
+  background: var(--mirror-surface);
+  overflow: hidden;
+}
+.light-shell .coach-tabs button { color: var(--mirror-muted); border-color: var(--mirror-line); }
+.light-shell .coach-tabs button.active { color: white; background: var(--mirror-deep); }
+.light-shell .coach-start,
+.light-shell .coach-control,
+.light-shell .history-panel {
+  color: var(--mirror-text);
+  border-color: var(--mirror-line);
+  border-radius: 20px;
+  background: var(--mirror-surface);
+}
+.light-shell .coach-start h2,
+.light-shell .coach-control h2,
+.light-shell .history-panel h2,
+.light-shell .training-plan h2,
+.light-shell .training-plan h3,
+.light-shell .profile-intro h2,
+.light-shell .profile-result h3 {
+  color: var(--mirror-text);
+  font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+  font-weight: 650;
+}
+.light-shell .coach-start > p:not(.eyebrow),
+.light-shell .coach-control p,
+.light-shell .history-panel > p,
+.light-shell .training-plan p,
+.light-shell .profile-intro > p:not(.eyebrow) { color: var(--mirror-muted); }
+.light-shell .analysis-disc {
+  color: var(--mirror-accent);
+  border-color: #d9936b;
+  box-shadow: 0 0 0 24px rgba(214,106,44,.05), 0 0 0 48px rgba(214,106,44,.025);
+}
+.light-shell .foundation-grid {
+  gap: 10px;
+  border: 0;
+}
+.light-shell .foundation-card {
+  min-height: 270px;
+  border: 1px solid var(--mirror-line);
+  border-radius: 16px;
+  color: var(--mirror-text);
+  background: var(--mirror-surface);
+}
+.light-shell .foundation-top { color: #9f4c22; }
+.light-shell .foundation-top small { color: var(--mirror-muted); }
+.light-shell .foundation-card > strong { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+.light-shell .foundation-card > p { color: var(--mirror-muted); }
+.light-shell .score-track { border-color: #d5dbd6; background: #edf0ed; }
+.light-shell .score-track i { background: var(--mirror-accent); }
+.light-shell .score-track i.missing { background: repeating-linear-gradient(90deg, #cbd2cc 0 5px, transparent 5px 10px); }
+.light-shell .coach-chart,
+.light-shell .pause-map,
+.light-shell .chart-empty {
+  border-color: var(--mirror-line);
+  border-radius: 18px;
+  color: var(--mirror-text);
+  background: var(--mirror-surface);
+}
+.light-shell .coach-chart figcaption strong,
+.light-shell .pause-map figcaption strong,
+.light-shell .chart-empty strong { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+.light-shell .coach-chart figcaption span,
+.light-shell .pause-map figcaption span,
+.light-shell .coach-chart summary,
+.light-shell .pause-map summary { color: #9f4c22; }
+.light-shell .coach-chart figcaption p,
+.light-shell .pause-map figcaption p,
+.light-shell .chart-empty p,
+.light-shell .coach-chart details,
+.light-shell .pause-map details { color: var(--mirror-muted); }
+.light-shell .coach-chart svg text { fill: #5f6962; }
+.light-shell .coach-chart svg .chart-direct-label { fill: var(--mirror-text); }
+.light-shell .chart-grid { stroke: #e5e9e5; }
+.light-shell .chart-axis { stroke: #aeb7b0; }
+.light-shell .pause-track { border-color: #ccd3cd; background: #edf0ed; }
+.light-shell .pause-axis { color: var(--mirror-muted); }
+.light-shell .experimental-note {
+  color: #9f4c22;
+  border-color: #e5c7b6;
+  border-radius: 16px;
+  background: #fff8f3;
+}
+.light-shell .experimental-note strong { color: var(--mirror-text); }
+.light-shell .experimental-note p { color: var(--mirror-muted); }
+.light-shell .training-plan,
+.light-shell .profile-intro,
+.light-shell .profile-questions fieldset {
+  color: var(--mirror-text);
+  border-color: var(--mirror-line);
+  border-radius: 20px;
+  background: var(--mirror-surface);
+}
+.light-shell .training-weeks { gap: 1px; border-color: var(--mirror-line); background: var(--mirror-line); }
+.light-shell .training-weeks article { color: var(--mirror-text); border: 0; background: white; }
+.light-shell .training-weeks article > span { color: #9f4c22; }
+.light-shell .training-weeks article > small { color: var(--mirror-muted); }
+.light-shell .training-weeks article > div { color: #426653; border-color: var(--mirror-line); }
+.light-shell .profile-progress { background: #e5e9e5; }
+.light-shell .profile-progress span { background: var(--mirror-accent); }
+.light-shell .profile-intro > small { color: var(--mirror-muted); }
+.light-shell .profile-questions legend { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+.light-shell .profile-questions legend span { color: #9f4c22; border-color: #d9936b; }
+.light-shell .profile-questions button { border-color: #cbd2cc; background: white; }
+.light-shell .profile-questions button.red { color: #963d2a; }
+.light-shell .profile-questions button.yellow { color: #735b0a; }
+.light-shell .profile-questions button.green { color: #356347; }
+.light-shell .profile-questions button.blue { color: #345b80; }
+.light-shell .profile-questions button.selected { color: var(--mirror-text); background: #f1f4f1; }
+
+.light-shell .calibration-copy {
+  border: 1px solid var(--mirror-line);
+  border-radius: 20px;
+  color: var(--mirror-text);
+  background: var(--mirror-surface);
+}
+.light-shell .calibration-copy h2 { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; letter-spacing: -.05em; }
+.light-shell .calibration-copy > p:not(.eyebrow) { color: var(--mirror-muted); }
+.light-shell .calibration-copy li span { color: #9f4c22; border-color: #d9936b; }
+.light-shell .soundcheck {
+  border-color: #40564b;
+  border-radius: 20px;
+  color: #f3f6f4;
+  background: var(--mirror-deep);
+}
+.light-shell .soundcheck h2, .light-shell .calibration-count { color: white; }
+.light-shell .soundcheck p { color: #cbd5cf; }
+.light-shell .level-meter { border-color: #61766a; background: #192921; }
+.light-shell .level-meter span { background: #e18a55; }
+
+@media (max-width: 900px) {
+  .light-shell .foundation-grid { grid-template-columns: repeat(2, 1fr); }
+  .light-shell .foundation-card:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 680px) {
+  .light-shell .page-frame { width: min(100% - 28px, 1180px); }
+  .light-shell .page-intro { align-items: flex-start; }
+  .light-shell .page-intro > :last-child { width: 100%; }
+  .light-shell .page-intro > :last-child.button { width: 100%; }
+  .light-shell .foundation-grid { grid-template-columns: 1fr; }
+  .light-shell .foundation-card:last-child { grid-column: auto; }
+  .light-shell .coach-tabs { grid-template-columns: 1fr; }
+  .light-shell .coach-tabs button { min-height: 48px; border-right: 0; border-bottom: 1px solid var(--mirror-line); }
+  .light-shell .coach-tabs button:last-child { border-bottom: 0; }
+  .light-shell .calibration-stage { gap: 12px; }
+}

@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildTrainingPlan, type FoundationScore } from "../src/lib/coach";
 import { findTenseFlags } from "../src/lib/esl";
+import { getHomeAction } from "../src/lib/home";
 import { hydrateState } from "../src/lib/storage/state";
+import { mediaAccessErrorMessage } from "../src/lib/media/recorder";
 import { beginNextCycle, createCurrentSessionSummary } from "../src/lib/history";
 import { getTranscriptMetrics } from "../src/lib/transcript";
 import {
@@ -85,6 +87,27 @@ test("focus suggestions are derived from the completed review evidence", () => {
     averagePauseSeconds: 1,
     speechRatio: 0.7,
   }), ["fillers", "structure"]);
+});
+
+test("Home routes each weekly-loop state to one primary next action", () => {
+  const none = { audio: false, visual: false, transcript: false };
+  const audio = { ...none, audio: true };
+  const all = { audio: true, visual: true, transcript: true };
+  const focus = { category: "pause" as const, customCategory: "", action: "Pause after each main idea." };
+
+  assert.equal(getHomeAction(false, false, none, null).step, 0);
+  assert.equal(getHomeAction(true, true, none, null).step, 1);
+  assert.equal(getHomeAction(true, false, none, null).label, "Begin your review");
+  assert.equal(getHomeAction(true, false, audio, null).label, "Continue your review");
+  assert.equal(getHomeAction(true, false, all, null).label, "Choose one focus");
+  assert.equal(getHomeAction(true, false, all, focus).step, 3);
+});
+
+test("camera permission, missing-device, and startup errors have actionable messages", () => {
+  assert.match(mediaAccessErrorMessage({ name: "NotAllowedError" }), /site settings/i);
+  assert.match(mediaAccessErrorMessage({ name: "SecurityError" }), /blocked/i);
+  assert.match(mediaAccessErrorMessage({ name: "NotFoundError" }), /connect both devices/i);
+  assert.match(mediaAccessErrorMessage(new Error("busy")), /close other apps/i);
 });
 
 test("legacy and malformed state hydrates into bounded version-three state", () => {

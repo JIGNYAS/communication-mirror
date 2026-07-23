@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { Activity, ArrowRight, AudioLines, Check, Clock3, Gauge, LoaderCircle, Mic2, Palette, RefreshCcw, ShieldCheck, Sparkles, Target, Waves } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -13,6 +13,7 @@ import { getRecording } from "@/lib/storage/db";
 import type { AnalysisHistoryItem, ProfileColor } from "@/types/coach";
 
 type CoachView = "foundations" | "plan" | "profile";
+const coachViews: CoachView[] = ["foundations", "plan", "profile"];
 
 const subscribeToLocation = (notify: () => void) => {
   window.addEventListener("popstate", notify);
@@ -100,17 +101,29 @@ export default function CoachPage() {
     });
   }
 
+  function moveTab(event: KeyboardEvent<HTMLButtonElement>, current: CoachView): void {
+    const direction = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    if (!direction) return;
+    event.preventDefault();
+    const index = coachViews.indexOf(current);
+    const next = coachViews[(index + direction + coachViews.length) % coachViews.length];
+    setSelectedView(next);
+    requestAnimationFrame(() => document.getElementById(`insights-tab-${next}`)?.focus());
+  }
+
   return (
-    <AppShell active="coach" eyebrow="Optional · On-device insights" title="Measure the take without replacing your judgment." aside={<div className="coach-privacy"><ShieldCheck size={16} /> ANALYZED IN THIS BROWSER</div>}>
+    <AppShell active="coach" tone="light" eyebrow="Optional · On-device insights" title="Measure the take without replacing your judgment." aside={<div className="coach-privacy"><ShieldCheck size={16} /> ANALYZED IN THIS BROWSER</div>}>
       <div className="coach-tabs" role="tablist" aria-label="Insight sections">
-        <button role="tab" aria-selected={view === "foundations"} className={view === "foundations" ? "active" : ""} onClick={() => setSelectedView("foundations")}><AudioLines size={17} /> Measurements</button>
-        <button role="tab" aria-selected={view === "plan"} className={view === "plan" ? "active" : ""} onClick={() => setSelectedView("plan")}><Target size={17} /> 4-Week Plan</button>
-        <button role="tab" aria-selected={view === "profile"} className={view === "profile" ? "active" : ""} onClick={() => setSelectedView("profile")}><Palette size={17} /> Color Profile</button>
+        <button id="insights-tab-foundations" role="tab" aria-controls="insights-panel-foundations" aria-selected={view === "foundations"} tabIndex={view === "foundations" ? 0 : -1} className={view === "foundations" ? "active" : ""} onKeyDown={(event) => moveTab(event, "foundations")} onClick={() => setSelectedView("foundations")}><AudioLines size={17} /> Measurements</button>
+        <button id="insights-tab-plan" role="tab" aria-controls="insights-panel-plan" aria-selected={view === "plan"} tabIndex={view === "plan" ? 0 : -1} className={view === "plan" ? "active" : ""} onKeyDown={(event) => moveTab(event, "plan")} onClick={() => setSelectedView("plan")}><Target size={17} /> 4-Week Plan</button>
+        <button id="insights-tab-profile" role="tab" aria-controls="insights-panel-profile" aria-selected={view === "profile"} tabIndex={view === "profile" ? 0 : -1} className={view === "profile" ? "active" : ""} onKeyDown={(event) => moveTab(event, "profile")} onClick={() => setSelectedView("profile")}><Palette size={17} /> Color Profile</button>
       </div>
 
-      {view === "foundations" && <FoundationsView state={state} reviewDone={reviewDone} analysisStatus={analysisStatus} analysisError={analysisError} scores={scores} onAnalyze={() => void analyze()} onRateTonality={rateTonality} />}
-      {view === "plan" && <PlanView hasAnalysis={Boolean(analysis)} plan={trainingPlan} />}
-      {view === "profile" && <ProfileView answers={state.coach.profiler.answers} result={state.coach.profiler.result} onAnswer={answerProfile} />}
+      <div id={`insights-panel-${view}`} role="tabpanel" aria-labelledby={`insights-tab-${view}`}>
+        {view === "foundations" && <FoundationsView state={state} reviewDone={reviewDone} analysisStatus={analysisStatus} analysisError={analysisError} scores={scores} onAnalyze={() => void analyze()} onRateTonality={rateTonality} />}
+        {view === "plan" && <PlanView hasAnalysis={Boolean(analysis)} plan={trainingPlan} />}
+        {view === "profile" && <ProfileView answers={state.coach.profiler.answers} result={state.coach.profiler.result} onAnswer={answerProfile} />}
+      </div>
     </AppShell>
   );
 }
@@ -129,7 +142,7 @@ function FoundationsView({ state, reviewDone, analysisStatus, analysisError, sco
   const analysis = state.coach.current;
   if (!state.diagnostic.hasRecording) return <section className="empty-state large"><Gauge size={48} /><h2>Insights need a current take.</h2><p>Record first if you want optional on-device measurements. The weekly Mirror loop works without them.</p><Link className="button primary" href="/diagnostic">Record a take <ArrowRight size={17} /></Link></section>;
   if (!reviewDone) return <section className="empty-state large"><Clock3 size={48} /><h2>Review before measuring.</h2><p>Finish the isolated-channel review first. Insights remain optional and never block the next weekly cycle.</p><Link className="button primary" href="/review">Finish the review <ArrowRight size={17} /></Link></section>;
-  if (!analysis) return <section className="coach-start panel"><div className="analysis-disc"><Waves size={48} /></div><p className="eyebrow">One-time local analysis</p><h2>Decode the saved audio on this device.</h2><p>Mirror will measure rate, RMS volume, silences longer than 700ms, and best-effort pitch movement. The recording does not leave the browser.</p><div className="coach-start-actions"><button className="button primary large" disabled={analysisStatus === "running"} onClick={onAnalyze}>{analysisStatus === "running" ? <LoaderCircle className="spin" size={18} /> : <Activity size={18} />}{analysisStatus === "running" ? "Analyzing the take…" : "Analyze my recording"}</button><Link className="button secondary" href="/calibration"><Mic2 size={17} /> Calibrate volume</Link></div>{analysisError && <p className="status-banner error" role="alert">{analysisError}</p>}</section>;
+  if (!analysis) return <section className="coach-start panel"><div className="analysis-disc"><Waves size={48} /></div><p className="eyebrow">One-time local analysis</p><h2>Decode the saved audio on this device.</h2><p>Mirror will measure rate, RMS volume, silences longer than 700ms, and best-effort pitch movement. The recording does not leave the browser.</p><div className="coach-start-actions"><button className="button primary large" disabled={analysisStatus === "running"} onClick={onAnalyze}>{analysisStatus === "running" ? <LoaderCircle className="spin" size={18} /> : <Activity size={18} />}{analysisStatus === "running" ? "Analyzing the take…" : "Analyze my recording"}</button><Link className="button secondary" href="/calibration"><Mic2 size={17} /> Calibrate volume</Link></div>{analysisStatus === "running" && <p className="sr-only" role="status">Analyzing the saved take on this device.</p>}{analysisError && <p className="status-banner error" role="alert">{analysisError}</p>}</section>;
 
   const volumeInsight = state.coach.calibration.targetRms ? `Average projection reached ${Math.round((analysis.overallRms / state.coach.calibration.targetRms) * 100)}% of your Level 5 target.` : "Calibrate the microphone to turn relative RMS into a personal projection target.";
   const pitchInsight = analysis.pitchStdDevHz === null ? "Not enough stable pitch was detected." : `Median ${Math.round(analysis.pitchMedianHz ?? 0)} Hz with ${Math.round(analysis.pitchStdDevHz)} Hz variation.`;
@@ -137,7 +150,7 @@ function FoundationsView({ state, reviewDone, analysisStatus, analysisError, sco
   return <>
     <section className="coach-control panel"><div><p className="eyebrow">Current take</p><h2>{new Date(analysis.sourceRecordedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}</h2><p>Analyzed {new Date(analysis.analyzedAt).toLocaleString()}</p></div><div className="coach-control-actions"><Link className="button secondary" href="/calibration"><Mic2 size={17} /> {state.coach.calibration.baselineRms ? "Recalibrate" : "Calibrate volume"}</Link><button className="button secondary" disabled={analysisStatus === "running"} onClick={onAnalyze}><RefreshCcw size={17} /> Analyze again</button></div></section>
     {analysisError && <p className="status-banner error" role="alert">{analysisError}</p>}
-    <section className="foundation-grid">{scores.map((score) => <article className="foundation-card" key={score.id}><div className="foundation-top"><span>{score.label}</span><small>{score.confidence}</small></div><strong>{score.value}</strong><div className="score-track" aria-label={`${score.label} score ${score.score ?? "unavailable"} out of 100`}>{score.score === null ? <i className="missing" /> : <i style={{ width: `${score.score}%` }} />}</div><p>{score.advice}</p>{score.id === "tonality" && <div className="tonality-rating" aria-label="Tonality self-rating">{[1,2,3,4,5].map((rating) => <button className={state.coach.tonalityRating === rating ? "selected" : ""} key={rating} onClick={() => onRateTonality(rating)}>{rating}</button>)}</div>}</article>)}</section>
+    <section className="foundation-grid">{scores.map((score) => <article className="foundation-card" key={score.id}><div className="foundation-top"><span>{score.label}</span><small>{score.confidence}</small></div><strong>{score.value}</strong><div className="score-track" role="meter" aria-label={`${score.label} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={score.score ?? undefined} aria-valuetext={score.score === null ? "Unavailable" : `${score.score} out of 100`}>{score.score === null ? <i className="missing" /> : <i style={{ width: `${score.score}%` }} />}</div><p>{score.advice}</p>{score.id === "tonality" && <div className="tonality-rating" aria-label="Tonality self-rating">{[1,2,3,4,5].map((rating) => <button type="button" aria-label={`Tonality: ${rating} out of 5`} aria-pressed={state.coach.tonalityRating === rating} className={state.coach.tonalityRating === rating ? "selected" : ""} key={rating} onClick={() => onRateTonality(rating)}>{rating}</button>)}</div>}</article>)}</section>
     <section className="coach-chart-grid"><LineChart id="volume-chart" title="Projection changed across the take" insight={volumeInsight} points={analysis.volumeSeries.map((point) => ({ ...point, value: point.value * 1000 }))} duration={analysis.durationSeconds} unit="rel." startAtZero /><PauseMap pauses={analysis.pauses} duration={analysis.durationSeconds} /><LineChart id="pitch-chart" title="Melody moved instead of staying on one key" insight={pitchInsight} points={analysis.pitchSeries} duration={analysis.durationSeconds} unit="Hz" color="#9cb58b" experimental /><LineChart id="pace-chart" title="Pace by 30-second window" insight={paceInsight} points={analysis.paceSeries} duration={analysis.durationSeconds} unit="WPM" color="#d58e72" startAtZero /></section>
     <section className="experimental-note"><Sparkles size={18} /><div><strong>Pitch and uptalk are experimental.</strong><p>The browser found {analysis.voicedFrames} usable pitch frames and {analysis.uptalkRising} rising endings among {analysis.uptalkCandidates} candidates. Room noise, microphone processing, accent, and voice type can change these estimates.</p></div></section>
     {state.coach.history.length >= 2 && <HistoryTable history={state.coach.history} />}

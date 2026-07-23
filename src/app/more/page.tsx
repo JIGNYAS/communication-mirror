@@ -120,7 +120,7 @@ export default function MorePage() {
           <button className="data-action" disabled={!state.diagnostic.hasRecording} onClick={() => downloadVideo().then(() => setMessage("Video downloaded.")).catch((error: Error) => setMessage(error.message))}><Video size={18} /><span><strong>Download current video</strong><small>{state.diagnostic.hasRecording ? "Save the take separately" : "No saved take yet"}</small></span><Download size={16} /></button>
           <button className="data-action danger" onClick={() => void removeEverything()}><Trash2 size={18} /><span><strong>Delete everything</strong><small>Remove local Mirror data</small></span><ArrowRight size={16} /></button>
         </div>
-        <input ref={importRef} className="sr-only" type="file" accept="application/json" onChange={(event) => void restore(event.target.files?.[0])} />
+        <input ref={importRef} className="sr-only" type="file" accept="application/json" aria-label="Restore Mirror notes backup" onChange={(event) => void restore(event.target.files?.[0])} />
       </section>
     </AppShell>
   );

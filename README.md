@@ -2,27 +2,31 @@
 
 A private rehearsal room for seeing how you communicate.
 
-The Mirror turns a simple practice method into a local-first web app:
+The Mirror turns Vinh Giang's record-and-review practice into one small, local-first weekly loop:
 
-1. Choose five qualities you want people to feel when you speak.
-2. Record one five-minute, no-restart diagnostic.
+1. Optionally choose up to five qualities you want people to feel when you speak.
+2. Record one five-minute, no-restart take.
 3. Wait 24 hours so immediate self-criticism can fade.
 4. Review through three isolated channels: blind listen, mute watch, and transcript.
-5. Take one specific change into a daily practice rep.
+5. Save one specific focus and practice the recommended rep.
 
 ## What works now
 
-- Five-word communication rubric
+- One next action on Home, with the complete Record → Wait → Review → Improve method visible
+- A deliberately small top-level navigation: Home, History, and More
+- Optional intention words, trimmed and deduplicated up to five
 - Camera and microphone preview with clear permission recovery
 - Native `MediaRecorder` capture with browser MIME fallbacks and periodic chunk flushing
 - Durable interrupted-take recovery from IndexedDB-backed recording chunks
 - Optional live browser transcription with an explicit Chrome/Google processing notice
 - 24-hour review lock and development-only `?unlock` escape hatch
-- Audio-only goal ratings, muted visual behavior tagging, and transcript review
+- Sequenced audio-only ratings, muted visual behavior tagging, transcript review, and required focus selection
 - On-device WPM, non-word, and filler counts with transcript highlighting
+- Weekly summary history without storing earlier videos
+- Contextual practice recommendation derived from the saved focus
 - Ten-second microphone calibration that stores only a numeric loudness baseline
 - On-device recording analysis for volume, pauses, pace, pitch range, and experimental uptalk candidates
-- Five-foundations Coach dashboard with plain-language cues, direct-labeled charts, and table equivalents
+- Optional Insights dashboard with plain-language cues, direct-labeled charts, and table equivalents
 - Rule-based four-week plan generated from the weakest measurable foundations
 - Red / Yellow / Green / Blue communication profile with tailored rehearsal advice
 - Optional ESL review mode with clearly labeled, heuristic tense-consistency flags
@@ -31,6 +35,7 @@ The Mirror turns a simple practice method into a local-first web app:
 - Five-minute vocal warm-up sequence
 - JSON notes backup/restore, separate video download, and delete-everything control
 - Install manifest and offline-after-first-visit service worker
+- Keyboard-accessible navigation, visible focus, screen-reader status messages, 44px controls, and reduced-motion support
 
 ## Privacy model
 
@@ -72,14 +77,17 @@ For local review testing only, append `?unlock` to `/review` while running `npm 
 
 - `src/app/diagnostic/` — goals, consent, prompts, recording, and lock handoff
 - `src/app/review/` — countdown gate and isolated-channel review
-- `src/app/coach/` — five-foundations analysis, trends, four-week plan, and Color Profile
+- `src/app/history/` — summary-only weekly practice ledger
+- `src/app/more/` — optional tools, preferences, backup/restore, and deletion
+- `src/app/coach/` — optional measurements, trends, four-week plan, and Color Profile
 - `src/app/calibration/` — disposable ten-second microphone level calibration
-- `src/app/gym/` — daily drills, frameworks, and warm-ups
+- `src/app/gym/` — contextual recommendation, daily drills, frameworks, and warm-ups
+- `src/lib/home.ts` — deterministic Home-state routing
 - `src/lib/audio/` — browser-native RMS, pause, pace, and autocorrelation pitch analysis
 - `src/lib/storage/` — versioned local state, IndexedDB video, backup/restore
 - `src/lib/media/` — camera/mic and speech-recognition adapters
 - `src/hooks/useRecorder.ts` — recording lifecycle and interrupted-take recovery queue
-- `tests/logic.test.ts` — deterministic WPM, filler, hydration, plan-ranking, and ESL checks
+- `tests/logic.test.ts` — deterministic routing, optional goals, review sequencing, migration, history, focus mapping, media errors, metrics, plan-ranking, and ESL checks
 - `src/types/` — explicit state and review contracts
 
 ## Browser expectations
@@ -90,6 +98,4 @@ Camera and microphone access require HTTPS in production (localhost is allowed f
 
 ## Scope boundary
 
-This repository implements the full local feature plan: the Mirror loop, on-device Coach, and retention layer. It deliberately has no cloud AI, account system, cross-device sync, server database, or automatic grammar correction. Speech recognition is the one optional browser feature that may use Google processing; all stored-media analysis remains on-device.
-
-The implementation can be complete without the product being proven. Per this project's witness rule, it is not considered shipped until it is deployed, the README is reviewable by a stranger, and two real people have used it. Deployment and those two witness sessions are still external handoff steps.
+This repository implements the complete local product loop, optional on-device Insights, contextual Practice, and summary-only History. It deliberately has no cloud AI, account system, cross-device sync, server database, or automatic grammar correction. Speech recognition is the one optional browser feature that may use Google processing; all stored-media analysis remains on-device.

@@ -49,7 +49,7 @@ export default function CalibrationPage() {
   const saved = state.coach.calibration;
 
   return (
-    <AppShell active="coach" eyebrow="Sound check" title="Give volume a reference point." aside={<Link className="button secondary" href="/coach"><ArrowLeft size={16} /> Back to Coach</Link>}>
+    <AppShell active="coach" tone="light" eyebrow="Sound check" title="Give volume a reference point." aside={<Link className="button secondary" href="/coach"><ArrowLeft size={16} /> Back to Insights</Link>}>
       <section className="calibration-stage">
         <div className="calibration-copy">
           <p className="eyebrow">Level 3 · Conversational voice</p>
@@ -64,8 +64,10 @@ export default function CalibrationPage() {
         </div>
         <div className="soundcheck panel">
           <div className={phase === "running" ? "calibration-mic live" : "calibration-mic"}><Mic2 size={40} /></div>
-          {phase === "running" ? <><strong className="calibration-count">{remaining}</strong><p>Keep speaking at Level 3</p></> : phase === "done" ? <><Check size={28} className="calibration-check" /><h2>Reference saved</h2><p>Level 3: {saved.baselineRms?.toFixed(4)} RMS<br />Level 5 target: {saved.targetRms?.toFixed(4)} RMS</p></> : <><Radio size={28} /><h2>Ready for sound check</h2><p>Your browser will ask for microphone permission.</p></>}
-          <div className="level-meter" aria-label={`Live microphone level ${Math.round(displayLevel)} percent`}><span style={{ width: `${displayLevel}%` }} /></div>
+          <div aria-live="polite" aria-atomic="true">
+            {phase === "running" ? <><strong className="calibration-count">{remaining}</strong><p>Keep speaking at Level 3</p></> : phase === "done" ? <><Check size={28} className="calibration-check" /><h2>Reference saved</h2><p>Level 3: {saved.baselineRms?.toFixed(4)} RMS<br />Level 5 target: {saved.targetRms?.toFixed(4)} RMS</p></> : <><Radio size={28} /><h2>Ready for sound check</h2><p>Your browser will ask for microphone permission.</p></>}
+          </div>
+          <div className="level-meter" role="progressbar" aria-label="Live microphone level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(displayLevel)}><span style={{ width: `${displayLevel}%` }} /></div>
           <button className="button primary full" disabled={phase === "running"} onClick={() => void startCalibration()}>{phase === "done" ? <RotateCcw size={17} /> : <Mic2 size={17} />}{phase === "done" ? "Calibrate again" : "Start 10-second calibration"}</button>
           {error && <p className="field-note" role="alert">{error}</p>}
         </div>

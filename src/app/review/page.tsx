@@ -479,7 +479,7 @@ function AudioTask({ goals, ratings, tonalityRating, onRate, onRateTonality }: A
             <div key={goal}>
               <strong>{goal}</strong>
               <div>{[1, 2, 3, 4, 5].map((rating) => (
-                <button aria-label={`${goal}: ${rating} out of 5`} className={ratings[goal] === rating ? "selected" : ""} key={rating} onClick={() => onRate(goal, rating)}>{rating}</button>
+                <button type="button" aria-label={`${goal}: ${rating} out of 5`} aria-pressed={ratings[goal] === rating} className={ratings[goal] === rating ? "selected" : ""} key={rating} onClick={() => onRate(goal, rating)}>{rating}</button>
               ))}</div>
             </div>
           ))}
@@ -489,7 +489,7 @@ function AudioTask({ goals, ratings, tonalityRating, onRate, onRateTonality }: A
         <div><strong>Tonality</strong><small>How clearly did a deliberate feeling come through? This is a self-rating, not a browser measurement.</small></div>
         <div className="tonality-rating" aria-label="Tonality self-rating">
           {[1, 2, 3, 4, 5].map((rating) => (
-            <button aria-label={`Tonality: ${rating} out of 5`} className={tonalityRating === rating ? "selected" : ""} key={rating} onClick={() => onRateTonality(rating)}>{rating}</button>
+            <button type="button" aria-label={`Tonality: ${rating} out of 5`} aria-pressed={tonalityRating === rating} className={tonalityRating === rating ? "selected" : ""} key={rating} onClick={() => onRateTonality(rating)}>{rating}</button>
           ))}
         </div>
       </div>
@@ -513,7 +513,7 @@ function VisualTask({ tags, other, none, onToggle, onOther, onNone }: VisualTask
       <h2>Tag movement that does not help the message.</h2>
       <p>Do not label yourself. Label observable behavior.</p>
       <div className="tag-list">{BEHAVIOR_TAGS.map((tag) => (
-        <button className={tags.includes(tag) ? "selected" : ""} key={tag} onClick={() => onToggle(tag)}><Tags size={14} />{tag}</button>
+        <button type="button" aria-pressed={tags.includes(tag)} className={tags.includes(tag) ? "selected" : ""} key={tag} onClick={() => onToggle(tag)}><Tags size={14} />{tag}</button>
       ))}</div>
       <label className="field-label">Other observation<textarea value={other} onChange={(event) => onOther(event.target.value)} placeholder="Something specific you could see…" /></label>
       <label className="check-line"><input type="checkbox" checked={none} onChange={(event) => onNone(event.target.checked)} /><span>No distracting behavior stood out this time.</span></label>

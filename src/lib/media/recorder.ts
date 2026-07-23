@@ -18,13 +18,20 @@ export async function requestCameraAndMic(): Promise<MediaStream> {
       audio: { echoCancellation: true, noiseSuppression: true },
     });
   } catch (error) {
-    if (error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "SecurityError")) {
-      throw new Error("Camera or microphone access is blocked. Allow both in your browser’s site settings, then try again.");
-    }
-    if (error instanceof DOMException && error.name === "NotFoundError") {
-      throw new Error("No camera or microphone was found. Connect both devices and try again.");
-    }
-    throw new Error("The camera or microphone could not start. Close other apps using them, then retry.");
+    throw new Error(mediaAccessErrorMessage(error));
   }
+}
+
+export function mediaAccessErrorMessage(error: unknown): string {
+  const name = typeof error === "object" && error !== null && "name" in error
+    ? String(error.name)
+    : "";
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    return "Camera or microphone access is blocked. Allow both in your browser's site settings, then try again.";
+  }
+  if (name === "NotFoundError") {
+    return "No camera or microphone was found. Connect both devices and try again.";
+  }
+  return "The camera or microphone could not start. Close other apps using them, then retry.";
 }
 
