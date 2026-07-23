@@ -16,6 +16,7 @@
     "src/lib/coach.ts",
     "src/lib/esl.ts",
     "src/lib/intentions.ts",
+    "src/lib/practice.ts",
     "src/lib/review.ts",
     "src/lib/transcript.ts",
     "src/lib/constants/**/*.ts",

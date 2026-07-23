@@ -26,7 +26,8 @@ export const FOCUS_CATEGORIES: Array<{ id: FocusCategory; label: string; action:
   { id: "pause", label: "Pause", action: "Pause after each main idea." },
   { id: "voice", label: "Voice", action: "Choose one feeling and let it shape the sentence." },
   { id: "visual", label: "Visual delivery", action: "Keep your hands still until they support a point." },
-  { id: "language", label: "Fillers / language", action: "Replace fillers with one silent breath." },
+  { id: "fillers", label: "Fillers", action: "Replace fillers with one silent breath." },
+  { id: "language", label: "Language", action: "Say the main idea in fewer, clearer words." },
   { id: "structure", label: "Structure", action: "State the point before the explanation." },
   { id: "custom", label: "Something else", action: "" },
 ];
@@ -79,7 +80,7 @@ export function suggestFocusCategories(input: FocusSuggestionInput): FocusCatego
   ) add("pause");
   if (input.tonalityRating !== null && input.tonalityRating <= 3) add("voice");
   if (input.visualObservations > 0) add("visual");
-  if (input.metrics.nonWords + input.metrics.fillers >= 3) add("language");
+  if (input.metrics.nonWords + input.metrics.fillers >= 3) add("fillers");
   if (input.metrics.words > 0) add("structure");
 
   if (!suggestions.length) suggestions.push("voice", "structure");

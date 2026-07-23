@@ -1,6 +1,6 @@
 export type ReviewMode = "audio" | "visual" | "transcript";
 export type ReviewStep = ReviewMode | "focus";
-export type FocusCategory = "pace" | "pause" | "voice" | "visual" | "language" | "structure" | "custom";
+export type FocusCategory = "pace" | "pause" | "voice" | "visual" | "fillers" | "language" | "structure" | "custom";
 
 export interface ReviewCompletion {
   audio: boolean;

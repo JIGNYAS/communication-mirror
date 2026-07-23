@@ -13,6 +13,7 @@ import {
   suggestFocusCategories,
 } from "../src/lib/review";
 import { normalizeIntentions } from "../src/lib/intentions";
+import { getPracticeExercise, getPracticeRecommendation } from "../src/lib/practice";
 
 test("a fixed 100-word, 60-second passage reports 100 WPM", () => {
   const transcript = Array.from({ length: 100 }, (_, index) => `word${index + 1}`).join(" ");
@@ -77,6 +78,13 @@ test("focus suggestions are derived from the completed review evidence", () => {
     averagePauseSeconds: null,
     speechRatio: null,
   }), ["voice", "structure"]);
+  assert.deepEqual(suggestFocusCategories({
+    metrics: { words: 100, wpm: 140, nonWords: 1, fillers: 3 },
+    visualObservations: 0,
+    tonalityRating: 5,
+    averagePauseSeconds: 1,
+    speechRatio: 0.7,
+  }), ["fillers", "structure"]);
 });
 
 test("legacy and malformed state hydrates into bounded version-three state", () => {
@@ -97,6 +105,36 @@ test("legacy and malformed state hydrates into bounded version-three state", () 
   assert.equal(state.gym.streak, 0);
   assert.equal(state.coach.current, null);
   assert.deepEqual(state.history, []);
+});
+
+test("every saved focus maps to one contextual practice exercise", () => {
+  assert.equal(getPracticeExercise("pace"), "pause-rep");
+  assert.equal(getPracticeExercise("pause"), "pause-rep");
+  assert.equal(getPracticeExercise("fillers"), "pause-rep");
+  assert.equal(getPracticeExercise("structure"), "framework");
+  assert.equal(getPracticeExercise("language"), "framework");
+  assert.equal(getPracticeExercise("voice"), "warmup");
+  assert.equal(getPracticeExercise("visual"), "visual");
+  assert.equal(getPracticeExercise("custom"), "choose");
+
+  const recommendation = getPracticeRecommendation({
+    category: "pause",
+    customCategory: "",
+    action: "Pause after each main idea.",
+  });
+  assert.equal(recommendation?.exercise, "pause-rep");
+  assert.equal(recommendation?.focusAction, "Pause after each main idea.");
+  assert.equal(getPracticeRecommendation(null), null);
+});
+
+test("legacy combined filler-language focuses migrate to the filler exercise", () => {
+  const state = hydrateState({
+    review: {
+      focus: { category: "language", customCategory: "", action: "Replace fillers with one silent breath." },
+    },
+  });
+  assert.equal(state.review.focus?.category, "fillers");
+  assert.equal(state.review.focus ? getPracticeExercise(state.review.focus.category) : null, "pause-rep");
 });
 
 test("a valid single focus survives hydration while incomplete focus data is rejected", () => {

@@ -907,3 +907,97 @@ textarea.tall { min-height: 220px; }
   .history-metrics > div:nth-child(2) { border-right: 0; }
   .history-metrics > div:nth-child(n+3) { border-top: 1px solid var(--mirror-line); }
 }
+
+/* Slice 5: contextual practice and optional-tool organization */
+.light-shell .streak-pill { color: #9f4c22; border-color: #dfc4b4; border-radius: 999px; background: #fff8f3; }
+.practice-intro { margin-bottom: 24px; padding: 20px 22px; border: 1px solid var(--mirror-line); border-radius: 16px; color: var(--mirror-muted); background: var(--mirror-surface); display: flex; align-items: flex-start; gap: 14px; }
+.practice-intro > svg { flex: 0 0 auto; color: var(--mirror-accent); }
+.practice-intro strong { color: var(--mirror-text); font-size: 14px; }
+.practice-intro p { margin: 5px 0 0; font-size: 12px; line-height: 1.55; }
+.practice-prescription { margin-bottom: 30px; border: 1px solid #253b31; border-radius: 24px; color: white; background: var(--mirror-deep); overflow: hidden; box-shadow: 0 24px 70px rgba(35,52,44,.12); }
+.prescription-focus { min-height: 96px; padding: 20px 26px; border-bottom: 1px solid rgba(255,255,255,.13); display: grid; align-content: center; gap: 9px; }
+.prescription-focus span { color: #dca66f; font: 700 9px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .11em; }
+.prescription-focus strong { max-width: 930px; font: 600 clamp(1.35rem, 2.6vw, 2rem)/1.12 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.03em; }
+.practice-prescription > article { padding: clamp(26px, 4vw, 46px); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 28px; }
+.prescription-copy { max-width: 760px; }
+.prescription-copy > p { margin: 0 0 12px; color: #dca66f; font: 700 9px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .11em; text-transform: uppercase; }
+.prescription-copy h2 { margin: 0 0 15px; color: white; font: 600 clamp(2rem, 4.3vw, 4rem)/.98 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.055em; }
+.prescription-copy > span { max-width: 680px; color: #c8d2cb; font-size: 13px; line-height: 1.65; display: block; }
+.prescription-action { min-width: 235px; display: grid; justify-items: stretch; gap: 13px; }
+.prescription-action > strong { color: #f1c19e; font: 600 13px/1.2 "Cascadia Mono", Consolas, monospace; text-align: center; }
+.prescription-choices { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.prescription-choices button { min-height: 48px; padding: 10px 13px; border: 1px solid #5a6c63; border-radius: 12px; color: #c8d2cb; background: transparent; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.prescription-choices button.selected { color: white; border-color: #dca66f; background: rgba(220,166,111,.1); }
+.library-divider, .settings-divider { margin: 12px 0 20px; display: flex; align-items: center; gap: 14px; color: var(--mirror-muted); font: 700 9px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .12em; }
+.library-divider i, .settings-divider i { height: 1px; flex: 1; background: var(--mirror-line); }
+.light-shell .gym-grid .panel { color: var(--mirror-text); border-color: var(--mirror-line); border-radius: 20px; background: var(--mirror-surface); }
+.light-shell .gym-grid .panel h2 { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+.light-shell .gym-grid .panel > p { color: var(--mirror-muted); }
+.light-shell .word-ticket { border-radius: 16px; color: var(--mirror-text); background: #fff8f3; box-shadow: inset 0 0 0 1px #ead7ca; }
+.light-shell .word-ticket.active { box-shadow: inset 0 0 0 2px var(--mirror-accent); }
+.light-shell .framework-builder .segmented-control { border-color: var(--mirror-line); }
+.light-shell .framework-builder .segmented-control button { color: var(--mirror-muted); border-color: var(--mirror-line); }
+.light-shell .framework-builder .segmented-control button.active { color: white; background: var(--mirror-deep); }
+.light-shell .framework-builder .field-label, .light-shell .framework-fields label { color: var(--mirror-text); }
+.light-shell .framework-builder input, .light-shell .framework-builder textarea { color: var(--mirror-text); border-color: #cbd2cc; border-radius: 10px; background: white; }
+.light-shell .warmup-studio { border-color: var(--mirror-line); border-radius: 20px; color: var(--mirror-text); background: var(--mirror-surface); }
+.light-shell .warmup-heading h2 { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+.light-shell .warmup-heading p:not(.eyebrow) { color: var(--mirror-muted); }
+.light-shell .warmup-clock > span { color: #9f4c22; }
+.light-shell .warmup-list { border-color: var(--mirror-line); border-radius: 14px; overflow: hidden; }
+.light-shell .warmup-list > button { color: var(--mirror-muted); border-color: var(--mirror-line); background: white; }
+.light-shell .warmup-list > button.active { color: var(--mirror-text); background: #fff8f3; }
+.light-shell .warmup-list > button.done { color: #52715f; }
+.light-shell .warmup-list strong { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+.light-shell .warmup-list time, .light-shell .warmup-list > button > svg { color: #9f4c22; }
+
+.more-groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.more-group { border: 1px solid var(--mirror-line); border-radius: 20px; background: var(--mirror-surface); overflow: hidden; }
+.more-group > header { min-height: 185px; padding: 28px; }
+.more-group h2 { margin: 0 0 12px; color: var(--mirror-text); font: 650 clamp(2rem, 3.5vw, 3.2rem)/1 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.05em; }
+.more-group header > p:last-child { max-width: 500px; margin: 0; color: var(--mirror-muted); font-size: 12px; line-height: 1.6; }
+.more-group > div { border-top: 1px solid var(--mirror-line); }
+.more-tool-row { min-height: 85px; padding: 15px 20px; border-bottom: 1px solid var(--mirror-line); display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 13px; }
+.more-tool-row:last-child { border-bottom: 0; }
+.more-tool-row:hover { background: #f8f9f6; }
+.more-tool-row > span { width: 38px; height: 38px; border-radius: 12px; color: #9f4c22; background: var(--mirror-accent-soft); display: grid; place-items: center; }
+.more-tool-row > div { display: grid; gap: 5px; }
+.more-tool-row strong { color: var(--mirror-text); font-size: 13px; }
+.more-tool-row small { color: var(--mirror-muted); font-size: 11px; line-height: 1.4; }
+.more-tool-row > svg { color: var(--mirror-muted); }
+.settings-divider { margin-top: 34px; }
+.more-preferences { border: 1px solid var(--mirror-line); border-radius: 20px; background: var(--mirror-surface); display: grid; grid-template-columns: .8fr 1.1fr 1.1fr; overflow: hidden; }
+.more-preferences > div, .more-preferences > article, .more-preferences > label { min-height: 175px; padding: 26px; border-right: 1px solid var(--mirror-line); }
+.more-preferences > label { border-right: 0; }
+.more-preferences h2 { max-width: 310px; margin: 0; color: var(--mirror-text); font-size: 25px; line-height: 1.05; letter-spacing: -.04em; }
+.more-preferences article { display: flex; flex-direction: column; justify-content: space-between; }
+.more-preferences article strong, .more-preferences label strong { color: var(--mirror-text); font-size: 13px; }
+.more-preferences article p { margin: 8px 0 15px; color: var(--mirror-muted); font-size: 11px; line-height: 1.55; }
+.more-preferences article > span { color: #9f4c22; font: 700 8px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .08em; }
+.more-preferences > label { color: var(--mirror-text); display: grid; grid-template-columns: auto 1fr; align-content: center; gap: 12px; cursor: pointer; }
+.more-preferences input { margin-top: 3px; accent-color: var(--mirror-accent); }
+.more-preferences label span { display: grid; gap: 8px; }
+.more-preferences label small { color: var(--mirror-muted); font-size: 11px; line-height: 1.55; }
+
+@media (max-width: 900px) {
+  .practice-prescription > article { grid-template-columns: 1fr; }
+  .prescription-action { width: min(100%, 340px); }
+  .more-groups { grid-template-columns: 1fr; }
+  .more-preferences { grid-template-columns: 1fr; }
+  .more-preferences > div, .more-preferences > article, .more-preferences > label { min-height: 0; border-right: 0; border-bottom: 1px solid var(--mirror-line); }
+  .more-preferences > label { border-bottom: 0; }
+}
+
+@media (max-width: 680px) {
+  .practice-prescription { border-radius: 18px; }
+  .prescription-focus { padding: 18px 20px; }
+  .practice-prescription > article { padding: 24px 20px; }
+  .prescription-choices { grid-template-columns: repeat(2, 1fr); }
+  .prescription-action { width: 100%; }
+  .prescription-action .button { width: 100%; }
+  .light-shell .gym-grid .panel, .light-shell .warmup-studio { border-radius: 17px; }
+  .warmup-heading, .warmup-clock { align-items: flex-start; flex-direction: column; }
+  .more-group > header { min-height: 0; padding: 24px 20px; }
+  .more-tool-row { padding: 14px 16px; }
+  .settings-divider { margin-top: 28px; }
+}

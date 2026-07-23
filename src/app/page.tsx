@@ -82,7 +82,7 @@ export default function HomePage() {
             <div className="focus-marker-top"><span>ONE FOCUS</span><Check size={17} /></div>
             <p>{getFocusCategoryLabel(state.review.focus.category, state.review.focus.customCategory)}</p>
             <strong>{state.review.focus.action}</strong>
-            <Link href="/gym">Practice this focus <ArrowRight size={16} /></Link>
+            <Link href="/gym#recommended">Practice this focus <ArrowRight size={16} /></Link>
           </div>
         ) : (
           <div className="take-marker" aria-label="One five-minute take">

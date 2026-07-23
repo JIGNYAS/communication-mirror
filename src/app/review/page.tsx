@@ -431,7 +431,7 @@ export default function ReviewPage() {
                 <div><span>YOUR NEXT TAKE</span><Check size={18} /></div>
                 <p>{getFocusCategoryLabel(state.review.focus.category, state.review.focus.customCategory)}</p>
                 <strong>{state.review.focus.action}</strong>
-                <Link href="/gym">Practice this focus <ArrowRight size={17} /></Link>
+                <Link href="/gym#recommended">Practice this focus <ArrowRight size={17} /></Link>
               </article>
             ) : (
               <article className="focus-prompt-card">

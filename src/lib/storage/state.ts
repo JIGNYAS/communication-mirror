@@ -134,6 +134,7 @@ function focusCategory(value: unknown): import("@/types/review").FocusCategory |
     || value === "pause"
     || value === "voice"
     || value === "visual"
+    || value === "fillers"
     || value === "language"
     || value === "structure"
     || value === "custom"
@@ -143,8 +144,9 @@ function focusCategory(value: unknown): import("@/types/review").FocusCategory |
 
 function hydrateFocus(value: unknown): FocusSelection | null {
   if (!isRecord(value)) return null;
-  const category = focusCategory(value.category);
   const action = typeof value.action === "string" ? value.action.trim() : "";
+  const rawCategory = focusCategory(value.category);
+  const category = rawCategory === "language" && /\bfiller/i.test(action) ? "fillers" : rawCategory;
   const customCategory = typeof value.customCategory === "string" ? value.customCategory.trim() : "";
   return category && action && (category !== "custom" || customCategory)
     ? { category, customCategory, action }

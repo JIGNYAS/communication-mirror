@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Activity, ArrowRight, AudioLines, Check, Clock3, Gauge, LoaderCircle, Mic2, Palette, RefreshCcw, ShieldCheck, Sparkles, Target, Waves } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -14,6 +14,16 @@ import type { AnalysisHistoryItem, ProfileColor } from "@/types/coach";
 
 type CoachView = "foundations" | "plan" | "profile";
 
+const subscribeToLocation = (notify: () => void) => {
+  window.addEventListener("popstate", notify);
+  return () => window.removeEventListener("popstate", notify);
+};
+
+function getRequestedView(): CoachView {
+  const requested = new URLSearchParams(window.location.search).get("view");
+  return requested === "plan" || requested === "profile" ? requested : "foundations";
+}
+
 const profileQuestions: Array<{ id: string; prompt: string; options: Record<ProfileColor, string> }> = [
   { id: "decision", prompt: "When a group is stuck, I usually…", options: { red: "Choose a direction", yellow: "Create fresh energy", green: "Make space for everyone", blue: "Find the missing facts" } },
   { id: "meeting", prompt: "In a meeting, people rely on me to…", options: { red: "Keep momentum", yellow: "Build connection", green: "Keep the room steady", blue: "Make the logic precise" } },
@@ -25,7 +35,9 @@ const profileQuestions: Array<{ id: string; prompt: string; options: Record<Prof
 
 export default function CoachPage() {
   const { state, update } = useLocalState();
-  const [view, setView] = useState<CoachView>("foundations");
+  const requestedView = useSyncExternalStore(subscribeToLocation, getRequestedView, () => "foundations");
+  const [selectedView, setSelectedView] = useState<CoachView | null>(null);
+  const view = selectedView ?? requestedView;
   const [analysisStatus, setAnalysisStatus] = useState<"idle" | "running">("idle");
   const [analysisError, setAnalysisError] = useState("");
   const analysis = state.coach.current;
@@ -89,11 +101,11 @@ export default function CoachPage() {
   }
 
   return (
-    <AppShell active="coach" eyebrow="Act IV · On-device coach" title="Turn the take into one useful change." aside={<div className="coach-privacy"><ShieldCheck size={16} /> ANALYZED IN THIS BROWSER</div>}>
-      <div className="coach-tabs" role="tablist" aria-label="Coach sections">
-        <button role="tab" aria-selected={view === "foundations"} className={view === "foundations" ? "active" : ""} onClick={() => setView("foundations")}><AudioLines size={17} /> Foundations</button>
-        <button role="tab" aria-selected={view === "plan"} className={view === "plan" ? "active" : ""} onClick={() => setView("plan")}><Target size={17} /> 4-Week Plan</button>
-        <button role="tab" aria-selected={view === "profile"} className={view === "profile" ? "active" : ""} onClick={() => setView("profile")}><Palette size={17} /> Color Profile</button>
+    <AppShell active="coach" eyebrow="Optional · On-device insights" title="Measure the take without replacing your judgment." aside={<div className="coach-privacy"><ShieldCheck size={16} /> ANALYZED IN THIS BROWSER</div>}>
+      <div className="coach-tabs" role="tablist" aria-label="Insight sections">
+        <button role="tab" aria-selected={view === "foundations"} className={view === "foundations" ? "active" : ""} onClick={() => setSelectedView("foundations")}><AudioLines size={17} /> Measurements</button>
+        <button role="tab" aria-selected={view === "plan"} className={view === "plan" ? "active" : ""} onClick={() => setSelectedView("plan")}><Target size={17} /> 4-Week Plan</button>
+        <button role="tab" aria-selected={view === "profile"} className={view === "profile" ? "active" : ""} onClick={() => setSelectedView("profile")}><Palette size={17} /> Color Profile</button>
       </div>
 
       {view === "foundations" && <FoundationsView state={state} reviewDone={reviewDone} analysisStatus={analysisStatus} analysisError={analysisError} scores={scores} onAnalyze={() => void analyze()} onRateTonality={rateTonality} />}
@@ -115,8 +127,8 @@ interface FoundationsViewProps {
 
 function FoundationsView({ state, reviewDone, analysisStatus, analysisError, scores, onAnalyze, onRateTonality }: FoundationsViewProps) {
   const analysis = state.coach.current;
-  if (!state.diagnostic.hasRecording) return <section className="empty-state large"><Gauge size={48} /><h2>The Coach needs a real take.</h2><p>Record a diagnostic first. The browser analyzes the saved audio only after the Mirror review.</p><Link className="button primary" href="/diagnostic">Record a baseline <ArrowRight size={17} /></Link></section>;
-  if (!reviewDone) return <section className="empty-state large"><Clock3 size={48} /><h2>Review before measuring.</h2><p>The isolated-channel review protects the method from becoming a score chase. Finish it before opening the Coach.</p><Link className="button primary" href="/review">Finish the review <ArrowRight size={17} /></Link></section>;
+  if (!state.diagnostic.hasRecording) return <section className="empty-state large"><Gauge size={48} /><h2>Insights need a current take.</h2><p>Record first if you want optional on-device measurements. The weekly Mirror loop works without them.</p><Link className="button primary" href="/diagnostic">Record a take <ArrowRight size={17} /></Link></section>;
+  if (!reviewDone) return <section className="empty-state large"><Clock3 size={48} /><h2>Review before measuring.</h2><p>Finish the isolated-channel review first. Insights remain optional and never block the next weekly cycle.</p><Link className="button primary" href="/review">Finish the review <ArrowRight size={17} /></Link></section>;
   if (!analysis) return <section className="coach-start panel"><div className="analysis-disc"><Waves size={48} /></div><p className="eyebrow">One-time local analysis</p><h2>Decode the saved audio on this device.</h2><p>Mirror will measure rate, RMS volume, silences longer than 700ms, and best-effort pitch movement. The recording does not leave the browser.</p><div className="coach-start-actions"><button className="button primary large" disabled={analysisStatus === "running"} onClick={onAnalyze}>{analysisStatus === "running" ? <LoaderCircle className="spin" size={18} /> : <Activity size={18} />}{analysisStatus === "running" ? "Analyzing the take…" : "Analyze my recording"}</button><Link className="button secondary" href="/calibration"><Mic2 size={17} /> Calibrate volume</Link></div>{analysisError && <p className="status-banner error" role="alert">{analysisError}</p>}</section>;
 
   const volumeInsight = state.coach.calibration.targetRms ? `Average projection reached ${Math.round((analysis.overallRms / state.coach.calibration.targetRms) * 100)}% of your Level 5 target.` : "Calibrate the microphone to turn relative RMS into a personal projection target.";
@@ -134,7 +146,7 @@ function FoundationsView({ state, reviewDone, analysisStatus, analysisError, sco
 
 function PlanView({ hasAnalysis, plan }: { hasAnalysis: boolean; plan: ReturnType<typeof buildTrainingPlan> }) {
   if (!hasAnalysis) return <section className="empty-state large"><Target size={48} /><h2>Measure before planning.</h2><p>The four-week sequence is generated from the weakest measured foundations, not generic advice.</p></section>;
-  return <section className="training-plan"><header><p className="eyebrow">Rule-based · No AI prompt</p><h2>Four weeks. One foundation at a time.</h2><p>The weakest signal comes first. Repeat the diagnostic after week four and let the next plan re-rank itself.</p></header><div className="training-weeks">{plan.map((item) => <article key={item.week}><span>WEEK {item.week}</span><small>{item.foundation}</small><h3>{item.title}</h3><p>{item.drill}</p><div><Check size={16} /><strong>{item.success}</strong></div></article>)}</div><Link className="button primary" href="/gym">Start today’s rep <ArrowRight size={17} /></Link></section>;
+  return <section className="training-plan"><header><p className="eyebrow">Rule-based · No AI prompt</p><h2>Four weeks. One foundation at a time.</h2><p>The weakest signal comes first. Repeat the diagnostic after week four and let the next plan re-rank itself.</p></header><div className="training-weeks">{plan.map((item) => <article key={item.week}><span>WEEK {item.week}</span><small>{item.foundation}</small><h3>{item.title}</h3><p>{item.drill}</p><div><Check size={16} /><strong>{item.success}</strong></div></article>)}</div><Link className="button primary" href="/gym#recommended">Start today’s rep <ArrowRight size={17} /></Link></section>;
 }
 
 interface ProfileViewProps { answers: Record<string, ProfileColor>; result: ProfileColor | null; onAnswer: (questionId: string, color: ProfileColor) => void; }
