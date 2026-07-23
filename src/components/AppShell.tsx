@@ -40,7 +40,7 @@ export function AppShell({ active, eyebrow, title, children, aside, tone = "dark
         )}
         {children}
       </main>
-      <footer className="site-footer"><span>Private by architecture.</span><span>No account Â· No upload Â· No audience</span></footer>
+      <footer className="site-footer"><span>Private by architecture.</span><span>No account · No upload · No audience</span></footer>
     </div>
   );
 }

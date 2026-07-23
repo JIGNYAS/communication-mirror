@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowRight, Camera, Check, ChevronRight, CircleStop, Clock3, Download, LockKeyhole, Mic2, RefreshCcw, ShieldCheck, Sparkles, Video } from "lucide-react";
+import { ArrowRight, Camera, Check, ChevronDown, ChevronRight, CircleStop, Clock3, Download, LockKeyhole, Mic2, RefreshCcw, ShieldCheck, Video } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useLocalState } from "@/hooks/useLocalState";
 import { useRecorder, type RecorderCapture } from "@/hooks/useRecorder";
@@ -10,6 +10,7 @@ import { DIAGNOSTIC_PROMPTS, DIAGNOSTIC_SECONDS, GOAL_SUGGESTIONS, LOCK_HOURS } 
 import { requestCameraAndMic } from "@/lib/media/recorder";
 import { canTranscribe, startLiveTranscription } from "@/lib/media/transcription";
 import { deleteRecording, putRecording } from "@/lib/storage/db";
+import { normalizeIntentions } from "@/lib/intentions";
 import type { TranscriptSegment } from "@/types/coach";
 
 type RecorderPhase = "setup" | "ready" | "recording" | "saving" | "locked";
@@ -21,6 +22,7 @@ function formatTime(total: number): string {
   const minutes = Math.floor(total / 60);
   return `${minutes}:${String(total % 60).padStart(2, "0")}`;
 }
+
 export default function DiagnosticPage() {
   const { state, update } = useLocalState();
   const [draftGoals, setDraftGoals] = useState<string[] | null>(null);
@@ -39,9 +41,11 @@ export default function DiagnosticPage() {
   const stopTranscriptionRef = useRef<() => void>(() => undefined);
   const { startRecording, stopRecording, requestDraftFlush, discardRecoveryDraft, recoveryDraft, recorderError, draftWarning } = useRecorder();
   const transcriptionAvailable = useSyncExternalStore(subscribeToBrowserCapabilities, canTranscribe, browserCapabilityUnavailable);
-  const goalDrafts = draftGoals ?? (state.goals.length === 5 ? state.goals : ["", "", "", "", ""]);
+  const goalDrafts = draftGoals ?? [...state.goals, "", "", "", "", ""].slice(0, 5);
   const activePhase = phase ?? (state.diagnostic.hasRecording ? "locked" : "setup");
-  const goalsValid = goalDrafts.every((goal) => goal.trim().length > 0) && new Set(goalDrafts.map((goal) => goal.trim().toLowerCase())).size === 5;
+  const enteredGoals = goalDrafts.map((goal) => goal.trim()).filter(Boolean);
+  const savedGoals = normalizeIntentions(goalDrafts);
+  const hasDuplicateGoals = savedGoals.length !== enteredGoals.length;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -111,9 +115,7 @@ export default function DiagnosticPage() {
   }, []);
 
   function saveGoals(): void {
-    if (!goalsValid) return;
-    const goals = goalDrafts.map((goal) => goal.trim());
-    update((current) => ({ ...current, goals, review: { ...current.review, ratings: Object.fromEntries(goals.map((goal) => [goal, current.review.ratings[goal] ?? 0])) } }));
+    update((current) => ({ ...current, goals: savedGoals, review: { ...current.review, ratings: Object.fromEntries(savedGoals.map((goal) => [goal, current.review.ratings[goal] ?? 0])) } }));
   }
 
   function addSuggestion(word: string): void {
@@ -139,7 +141,7 @@ export default function DiagnosticPage() {
   }
 
   async function beginRecording(): Promise<void> {
-    if (!streamRef.current || !goalsValid) return;
+    if (!streamRef.current) return;
     saveGoals();
     setError("");
     setRecoveryBlob(null);
@@ -206,8 +208,8 @@ export default function DiagnosticPage() {
 
   if (activePhase === "locked") {
     return (
-      <AppShell active="diagnostic" eyebrow="Take saved" title="Step away from the mirror.">
-        <section className="lock-confirmation">
+      <AppShell active="diagnostic" tone="light" eyebrow="Take saved" title="Your take is resting.">
+        <section className="lock-confirmation slice-two-lock">
           <div className="lock-orbit"><LockKeyhole size={42} /></div>
           <p className="eyebrow">The kindness buffer has begun</p>
           <h2>Your recording is locked for 24 hours.</h2>
@@ -222,7 +224,7 @@ export default function DiagnosticPage() {
   }
 
   return (
-    <AppShell active="diagnostic" eyebrow="Act I Â· The baseline" title="Record what happens before you can fix it." aside={<div className="no-restart"><CircleStop size={18} /><span>NO-RESTART TAKE</span></div>}>
+    <AppShell active="diagnostic" tone="light" eyebrow="Record" title="One honest five-minute take." aside={<div className="no-restart"><CircleStop size={18} /><span>NO RESTART</span></div>}>
       {recoveryDraft && !state.diagnostic.hasRecording && activePhase === "setup" && (
         <section className="draft-recovery" aria-labelledby="draft-recovery-title">
           <div><p className="eyebrow">Interrupted take found</p><h2 id="draft-recovery-title">The last recoverable chunks are still here.</h2><p>{recoveryDraft.durationSeconds}s across {recoveryDraft.chunkCount} saved chunks. Live transcript text may be incomplete after a closed tab.</p></div>
@@ -234,59 +236,66 @@ export default function DiagnosticPage() {
         </section>
       )}
       {draftWarning && <p className="status-banner error" role="alert">{draftWarning}</p>}
-      <section className="diagnostic-grid">
-        <div className="camera-column">
-          <div className={`camera-stage ${activePhase === "recording" ? "recording" : ""}`}>
+      <section className="record-layout">
+        <div className="record-primary">
+          <div className={`camera-stage record-camera ${activePhase === "recording" ? "recording" : ""}`}>
             <video ref={videoRef} autoPlay muted playsInline aria-label="Live camera preview" />
             {activePhase === "setup" && <div className="camera-placeholder"><Camera size={42} /><strong>Your preview appears here</strong><span>Camera and mic start only after you ask.</span></div>}
             {activePhase === "recording" && <div className="recording-badge"><span /> REC {formatTime(elapsed)}</div>}
           </div>
 
           {activePhase === "recording" ? (
-            <div className="cue-card">
-              <div className="cue-meta"><span>QUESTION {promptIndex + 1} / {DIAGNOSTIC_PROMPTS.length}</span><strong>{formatTime(Math.max(0, DIAGNOSTIC_SECONDS - elapsed))} LEFT</strong></div>
+            <div className="cue-card record-cue">
+              <div className="cue-meta"><span>CUE {promptIndex + 1} OF {DIAGNOSTIC_PROMPTS.length}</span><strong>{formatTime(Math.max(0, DIAGNOSTIC_SECONDS - elapsed))} LEFT</strong></div>
               <blockquote>{DIAGNOSTIC_PROMPTS[promptIndex]}</blockquote>
               <div className="button-row">
-                <button className="button secondary" disabled={promptIndex === DIAGNOSTIC_PROMPTS.length - 1} onClick={() => setPromptIndex((index) => Math.min(index + 1, DIAGNOSTIC_PROMPTS.length - 1))}>Next question <ChevronRight size={17} /></button>
+                <button className="button secondary" disabled={promptIndex === DIAGNOSTIC_PROMPTS.length - 1} onClick={() => setPromptIndex((index) => Math.min(index + 1, DIAGNOSTIC_PROMPTS.length - 1))}>Next cue <ChevronRight size={17} /></button>
                 <button className="button stop" onClick={() => void finishRecording()}><CircleStop size={18} /> End and save take</button>
               </div>
               <p className="fine-print">There is no pause or restart after recording begins. You may end early; elapsed time is saved for accurate WPM.</p>
             </div>
           ) : (
-            <div className="record-controls">
+            <div className="record-controls record-actionbar">
               {activePhase === "setup" && <button className="button primary large" onClick={() => void prepareCamera()}><Video size={19} /> Check camera and microphone</button>}
-              {activePhase === "ready" && <button className="button record large" disabled={!goalsValid} onClick={() => void beginRecording()}><span className="record-dot" /> Begin the five-minute take</button>}
-              {activePhase === "saving" && <button className="button secondary large" disabled><Clock3 size={18} /> Saving privatelyâ€¦</button>}
+              {activePhase === "ready" && <button className="button record large" onClick={() => void beginRecording()}><span className="record-dot" /> Begin the five-minute take</button>}
+              {activePhase === "saving" && <button className="button secondary large" disabled><Clock3 size={18} /> Saving privately…</button>}
               <p><ShieldCheck size={16} /> Preview and recording stay in this browser.</p>
             </div>
           )}
           {(error || recorderError) && <div className="status-banner error" role="alert"><span>{error || recorderError}</span>{recoveryBlob && <button className="button secondary" onClick={downloadRecovery}><Download size={16} /> Download recovery copy</button>}</div>}
         </div>
 
-        <aside className="setup-column">
-          <section className="panel goal-panel">
-            <div className="panel-heading"><div><p className="eyebrow">Your five words</p><h2>How should people feel you?</h2></div><span className={goalsValid ? "count valid" : "count"}>{goalDrafts.filter((goal) => goal.trim()).length}/5</span></div>
-            <p>Choose five distinct qualities. They become your rubric during the blind-listen review.</p>
-            <div className="goal-fields">
-              {goalDrafts.map((goal, index) => <label key={index}><span>{String(index + 1).padStart(2, "0")}</span><input value={goal} maxLength={24} placeholder={index === 0 ? "e.g. clear" : "quality"} onChange={(event) => setDraftGoals(goalDrafts.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /></label>)}
+        <aside className="record-options" aria-label="Optional recording preparation">
+          <p className="record-options-label">Optional preparation</p>
+
+          <details className="prep-card intention-card">
+            <summary><span><strong>Set an intention</strong><small>{savedGoals.length ? `${savedGoals.length} of 5 words` : "Skip this for your first take"}</small></span><ChevronDown size={18} /></summary>
+            <div className="prep-card-body">
+              <p>Add up to five qualities you want people to feel. They become an optional listening rubric later.</p>
+              <div className="goal-fields">
+                {goalDrafts.map((goal, index) => <label key={index}><span>{String(index + 1).padStart(2, "0")}</span><input value={goal} maxLength={24} placeholder={index === 0 ? "e.g. clear" : "Optional word"} onChange={(event) => setDraftGoals(goalDrafts.map((item, itemIndex) => itemIndex === index ? event.target.value : item))} /></label>)}
+              </div>
+              <div className="suggestion-row">{GOAL_SUGGESTIONS.map((word) => <button key={word} disabled={goalDrafts.some((goal) => goal.trim().toLowerCase() === word)} onClick={() => addSuggestion(word)}>+ {word}</button>)}</div>
+              {hasDuplicateGoals && <p className="field-note">Repeated words will be saved once.</p>}
+              <button className="button secondary full" onClick={saveGoals}><Check size={16} /> {savedGoals.length ? "Save intention" : "Clear intention"}</button>
             </div>
-            <div className="suggestion-row">{GOAL_SUGGESTIONS.map((word) => <button key={word} disabled={goalDrafts.some((goal) => goal.toLowerCase() === word)} onClick={() => addSuggestion(word)}>+ {word}</button>)}</div>
-            <button className="button secondary full" disabled={!goalsValid} onClick={saveGoals}><Check size={16} /> Save five words</button>
-            {!goalsValid && <p className="field-note">Enter five different words before recording.</p>}
-          </section>
+          </details>
 
-          <section className="panel transcript-consent">
-            <div className="panel-heading"><div><p className="eyebrow">Optional live transcript</p><h2>Capture words as you speak?</h2></div><Mic2 size={22} /></div>
-            {transcriptionAvailable ? <label className="switch-line"><input type="checkbox" checked={transcriptionOptIn} onChange={(event) => setTranscriptionOptIn(event.target.checked)} /><span><strong>Use browser speech recognition</strong><small>Chrome may send live microphone audio to Google for transcription. Mirror never uploads the saved video.</small></span></label> : <p className="field-note">Live transcription is unavailable here. You can paste a transcript during review.</p>}
-          </section>
+          <details className="prep-card transcript-consent">
+            <summary><span><strong>Capture a live transcript</strong><small>Optional · browser dependent</small></span><Mic2 size={18} /></summary>
+            <div className="prep-card-body">
+              {transcriptionAvailable ? <label className="switch-line"><input type="checkbox" checked={transcriptionOptIn} onChange={(event) => setTranscriptionOptIn(event.target.checked)} /><span><strong>Use browser speech recognition</strong><small>Chrome may send live microphone audio to Google for transcription. Mirror never uploads the saved video.</small></span></label> : <p className="field-note">Live transcription is unavailable here. You can paste a transcript during review.</p>}
+            </div>
+          </details>
 
-          <section className="prompt-sheet">
-            <p className="eyebrow dark">Tonightâ€™s five cues</p>
-            <ol>{DIAGNOSTIC_PROMPTS.map((prompt, index) => <li key={prompt}><span>{index + 1}</span><p>{prompt}</p>{index === promptIndex && activePhase === "recording" && <Sparkles size={15} />}</li>)}</ol>
-          </section>
+          <details className="prep-card prompt-preview">
+            <summary><span><strong>Preview the five cues</strong><small>Open only if preparation helps</small></span><ChevronDown size={18} /></summary>
+            <div className="prep-card-body"><ol className="record-prompt-list">{DIAGNOSTIC_PROMPTS.map((prompt, index) => <li key={prompt}><span>{index + 1}</span><p>{prompt}</p></li>)}</ol></div>
+          </details>
+
+          <p className="skip-note">You can ignore every option here and record immediately.</p>
         </aside>
       </section>
     </AppShell>
   );
 }
-

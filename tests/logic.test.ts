@@ -4,6 +4,8 @@ import { buildTrainingPlan, type FoundationScore } from "../src/lib/coach";
 import { findTenseFlags } from "../src/lib/esl";
 import { hydrateState } from "../src/lib/storage/state";
 import { getTranscriptMetrics } from "../src/lib/transcript";
+import { isAudioReviewReady } from "../src/lib/review";
+import { normalizeIntentions } from "../src/lib/intentions";
 
 test("a fixed 100-word, 60-second passage reports 100 WPM", () => {
   const transcript = Array.from({ length: 100 }, (_, index) => `word${index + 1}`).join(" ");
@@ -19,6 +21,18 @@ test("non-words and multi-word fillers are counted independently", () => {
   const metrics = getTranscriptMetrics("Um, I actually, you know, like the plan. Uh, I mean it.", 30);
   assert.equal(metrics.nonWords, 2);
   assert.equal(metrics.fillers, 4);
+});
+
+test("audio review works with no intention words and still validates selected words", () => {
+  assert.equal(isAudioReviewReady([], {}, 3), true);
+  assert.equal(isAudioReviewReady([], {}, null), false);
+  assert.equal(isAudioReviewReady(["clear", "warm"], { clear: 4 }, 3), false);
+  assert.equal(isAudioReviewReady(["clear", "warm"], { clear: 4, warm: 5 }, 3), true);
+});
+
+test("intentions are optional, trimmed, deduplicated, and capped at five", () => {
+  assert.deepEqual(normalizeIntentions(["", "  "]), []);
+  assert.deepEqual(normalizeIntentions([" Clear ", "clear", "warm", "calm", "credible", "concise", "extra"]), ["Clear", "warm", "calm", "credible", "concise"]);
 });
 
 test("legacy and malformed state hydrates into bounded version-two state", () => {
