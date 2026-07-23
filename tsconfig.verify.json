@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "incremental": false,
+    "isolatedModules": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "outDir": ".verify",
+    "rootDir": ".",
+    "target": "ES2022"
+  },
+  "include": [
+    "tests/**/*.ts",
+    "src/lib/coach.ts",
+    "src/lib/esl.ts",
+    "src/lib/transcript.ts",
+    "src/lib/constants/**/*.ts",
+    "src/lib/storage/state.ts",
+    "src/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".verify"]
+}

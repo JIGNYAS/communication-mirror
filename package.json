@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:logic": "tsc -p tsconfig.verify.json && node --test .verify/tests/logic.test.js"
   },
   "dependencies": {
     "lucide-react": "^1.17.0",
