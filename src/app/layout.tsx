@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Mirror", statusBarStyle: "black-translucent" },
 };
 
-export const viewport: Viewport = { themeColor: "#171611", colorScheme: "dark" };
+export const viewport: Viewport = { themeColor: "#f4f5f1", colorScheme: "light dark" };
 
 export default function RootLayout({
   children,
