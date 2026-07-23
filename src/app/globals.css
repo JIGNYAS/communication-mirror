@@ -702,3 +702,145 @@ textarea.tall { min-height: 220px; }
   .prep-card summary { min-height: 68px; }
   .slice-two-lock { margin-top: 30px; }
 }
+
+/* Slice 3: guided review and one persisted focus */
+.focus-marker {
+  min-height: 300px;
+  padding: 30px;
+  border: 1px solid #253b31;
+  border-radius: 28px;
+  color: #f7faf7;
+  background: var(--mirror-deep);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 24px 70px rgba(35,52,44,.12);
+}
+.focus-marker-top { display: flex; align-items: center; justify-content: space-between; color: #cbd5ce; font: 700 10px/1 "Cascadia Mono", Consolas, monospace; letter-spacing: .14em; }
+.focus-marker > p { margin: 30px 0 10px; color: #dca66f; font: 700 11px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.focus-marker > strong { max-width: 420px; color: white; font: 600 clamp(1.65rem, 3vw, 2.5rem)/1.08 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.035em; }
+.focus-marker > a { width: fit-content; margin-top: 28px; display: flex; align-items: center; gap: 8px; color: #d8e2db; font-size: 12px; font-weight: 700; }
+
+.light-shell .completion-pill { color: var(--mirror-muted); border-color: var(--mirror-line); background: var(--mirror-surface); }
+.light-shell .completion-pill.done { color: #3f6650; border-color: #b9ccbf; background: #f4faf5; }
+.light-shell .empty-state { color: var(--mirror-muted); border-color: var(--mirror-line); background: var(--mirror-surface); }
+.light-shell .empty-state h2 { color: var(--mirror-text); font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-weight: 650; }
+
+.review-rail {
+  margin-bottom: 18px;
+  border: 1px solid var(--mirror-line);
+  border-radius: 18px;
+  background: var(--mirror-surface);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  overflow: hidden;
+}
+.review-rail button {
+  min-height: 78px;
+  padding: 14px 17px;
+  border: 0;
+  border-right: 1px solid var(--mirror-line);
+  color: #909a93;
+  background: transparent;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+.review-rail button:last-child { border-right: 0; }
+.review-rail button:disabled { color: #b3bbb5; cursor: not-allowed; }
+.review-rail button.active { color: var(--mirror-text); background: #f2f5f1; box-shadow: inset 0 -3px var(--mirror-accent); }
+.review-rail button.complete:not(.active) { color: #52715f; }
+.review-rail button > span { width: 29px; height: 29px; border: 1px solid currentColor; border-radius: 50%; display: grid; place-items: center; font: 700 10px/1 "Cascadia Mono", Consolas, monospace; }
+.review-rail button.complete > span { color: white; border-color: #5e7a69; background: #5e7a69; }
+.review-rail button div { min-width: 0; display: grid; gap: 4px; }
+.review-rail button strong { color: inherit; font-size: 13px; }
+.review-rail button small { overflow: hidden; color: inherit; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+
+.guided-review-workspace { grid-template-columns: minmax(0, 1.35fr) minmax(330px, .65fr); gap: 16px; }
+.light-shell .guided-review-workspace .panel { border-color: var(--mirror-line); border-radius: 20px; }
+.light-shell .guided-review-workspace .review-media { min-height: 540px; }
+.light-shell .guided-review-workspace .review-task { min-height: 540px; padding: clamp(24px, 3.5vw, 38px); color: var(--mirror-text); background: var(--mirror-surface); }
+.light-shell .guided-review-workspace .review-task h2 { color: var(--mirror-text); font: 650 clamp(1.8rem, 3vw, 2.7rem)/1.02 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.045em; }
+.light-shell .guided-review-workspace .review-task > p:not(.eyebrow) { color: var(--mirror-muted); }
+.light-shell .guided-review-workspace .review-tonality { border-color: var(--mirror-line); }
+.light-shell .guided-review-workspace .review-tonality strong,
+.light-shell .guided-review-workspace .field-label { color: var(--mirror-text); }
+.light-shell .guided-review-workspace .review-tonality small { color: var(--mirror-muted); }
+.light-shell .guided-review-workspace .rating-table > div { border-color: var(--mirror-line); }
+.light-shell .guided-review-workspace .rating-table strong { color: var(--mirror-text); }
+.light-shell .guided-review-workspace .rating-table button,
+.light-shell .guided-review-workspace .tonality-rating button { border-color: #cbd2cc; color: var(--mirror-muted); background: white; }
+.light-shell .guided-review-workspace .rating-table button.selected,
+.light-shell .guided-review-workspace .tonality-rating button.selected { color: white; border-color: var(--mirror-accent); background: var(--mirror-accent); }
+.light-shell .guided-review-workspace input,
+.light-shell .guided-review-workspace textarea { color: var(--mirror-text); border-color: #cbd2cc; background: white; }
+.light-shell .guided-review-workspace .tag-list button { color: var(--mirror-muted); border-color: #cbd2cc; background: white; }
+.light-shell .guided-review-workspace .tag-list button.selected { color: #9f4c22; border-color: #d9936b; background: #fff7f1; }
+.light-shell .guided-review-workspace .check-line,
+.light-shell .guided-review-workspace .switch-line { color: var(--mirror-muted); }
+.light-shell .guided-review-workspace .mini-metrics { color: var(--mirror-muted); border-color: var(--mirror-line); }
+.review-gate-note { margin: 10px 0 0 !important; color: #9f4c22 !important; font-size: 10px !important; text-align: center; }
+
+.focus-workspace { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(320px, .58fr); gap: 18px; align-items: start; }
+.focus-builder { padding: clamp(28px, 4vw, 50px); border: 1px solid var(--mirror-line); border-radius: 22px; background: var(--mirror-surface); }
+.focus-builder h2 { max-width: 690px; margin: 0; color: var(--mirror-text); font: 650 clamp(2.2rem, 4.5vw, 4.2rem)/.98 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.055em; }
+.focus-intro { max-width: 650px; margin: 17px 0 30px; color: var(--mirror-muted); font-size: 14px; line-height: 1.65; }
+.focus-worked { margin-bottom: 28px; display: grid; gap: 9px; color: var(--mirror-text); font-size: 12px; font-weight: 700; }
+.focus-worked span { display: flex; align-items: center; gap: 7px; }
+.focus-worked small { color: var(--mirror-muted); font-size: 10px; font-weight: 500; }
+.focus-worked textarea { min-height: 82px; color: var(--mirror-text); border-color: #cbd2cc; border-radius: 12px; background: white; }
+.focus-choices { margin: 0 0 24px; padding: 0; border: 0; }
+.focus-choices legend { margin-bottom: 11px; color: var(--mirror-text); font-size: 12px; font-weight: 700; }
+.focus-choices > div { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+.focus-choices button { min-height: 62px; padding: 12px 14px; border: 1px solid #cbd2cc; border-radius: 12px; color: var(--mirror-text); background: white; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; cursor: pointer; }
+.focus-choices button.selected { color: #873f20; border-color: #cf7b4b; background: #fff6ef; box-shadow: inset 0 0 0 1px #cf7b4b; }
+.focus-choices button > span { font-size: 13px; font-weight: 700; }
+.focus-choices button small { display: flex; align-items: center; gap: 4px; color: #a45128; font: 700 8px/1 "Cascadia Mono", Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
+.light-field { margin: 16px 0; color: var(--mirror-text); }
+.light-field input, .light-field textarea { color: var(--mirror-text); border-color: #cbd2cc; border-radius: 12px; background: white; }
+.light-field textarea { min-height: 84px; }
+
+.focus-evidence { display: grid; gap: 14px; }
+.saved-focus-card, .focus-prompt-card, .review-metrics-card { border-radius: 22px; overflow: hidden; }
+.saved-focus-card { min-height: 300px; padding: 28px; color: #f5f8f6; background: var(--mirror-deep); display: flex; flex-direction: column; }
+.saved-focus-card > div { display: flex; align-items: center; justify-content: space-between; color: #cbd5ce; font: 700 9px/1 "Cascadia Mono", Consolas, monospace; letter-spacing: .13em; }
+.saved-focus-card > p { margin: auto 0 10px; color: #dca66f; font: 700 10px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+.saved-focus-card > strong { color: white; font: 600 clamp(1.5rem, 2.5vw, 2.15rem)/1.1 "Segoe UI Variable", "Segoe UI", Arial, sans-serif; letter-spacing: -.035em; }
+.saved-focus-card > a { margin-top: 26px; display: flex; align-items: center; gap: 8px; color: #dbe4de; font-size: 12px; font-weight: 700; }
+.focus-prompt-card { min-height: 250px; padding: 28px; border: 1px dashed #bdc8c0; color: var(--mirror-muted); background: #f8faf7; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.focus-prompt-card > svg { color: var(--mirror-accent); }
+.focus-prompt-card strong { max-width: 310px; color: var(--mirror-text); font-size: 18px; line-height: 1.25; }
+.focus-prompt-card p { margin: 0; font-size: 12px; line-height: 1.55; }
+.review-metrics-card { padding: 24px; border: 1px solid var(--mirror-line); background: var(--mirror-surface); }
+.review-metrics-card > div { display: grid; grid-template-columns: repeat(2, 1fr); }
+.review-metrics-card span { min-height: 78px; padding: 13px 8px; border-top: 1px solid var(--mirror-line); display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.review-metrics-card span:nth-child(odd) { border-right: 1px solid var(--mirror-line); }
+.review-metrics-card strong { color: var(--mirror-text); font-size: 21px; }
+.review-metrics-card small { color: var(--mirror-muted); font: 700 8px/1.2 "Cascadia Mono", Consolas, monospace; letter-spacing: .08em; }
+
+@media (max-width: 980px) {
+  .guided-review-workspace, .focus-workspace { grid-template-columns: 1fr; }
+  .light-shell .guided-review-workspace .review-media,
+  .light-shell .guided-review-workspace .review-task { min-height: 430px; }
+  .focus-evidence { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 680px) {
+  .focus-marker { min-height: 240px; padding: 24px; border-radius: 20px; }
+  .review-rail { grid-template-columns: repeat(2, 1fr); border-radius: 15px; }
+  .review-rail button { min-height: 68px; padding: 10px 12px; }
+  .review-rail button:nth-child(2) { border-right: 0; }
+  .review-rail button:nth-child(-n+2) { border-bottom: 1px solid var(--mirror-line); }
+  .review-rail button small { display: none; }
+  .light-shell .guided-review-workspace .review-media,
+  .light-shell .guided-review-workspace .review-task { min-height: 390px; }
+  .light-shell .guided-review-workspace .review-task { padding: 24px 20px; }
+  .focus-workspace { gap: 14px; }
+  .focus-builder { padding: 26px 20px; border-radius: 18px; }
+  .focus-choices > div { grid-template-columns: 1fr; }
+  .focus-evidence { grid-template-columns: 1fr; }
+  .saved-focus-card { min-height: 260px; }
+}

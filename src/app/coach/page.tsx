@@ -8,6 +8,7 @@ import { LineChart, PauseMap } from "@/components/CoachCharts";
 import { useLocalState } from "@/hooks/useLocalState";
 import { analyzeRecording } from "@/lib/audio/analysis";
 import { buildTrainingPlan, getFoundationScores, PROFILE_COPY } from "@/lib/coach";
+import { isReviewComplete } from "@/lib/review";
 import { getRecording } from "@/lib/storage/db";
 import type { AnalysisHistoryItem, ProfileColor } from "@/types/coach";
 
@@ -28,7 +29,7 @@ export default function CoachPage() {
   const [analysisStatus, setAnalysisStatus] = useState<"idle" | "running">("idle");
   const [analysisError, setAnalysisError] = useState("");
   const analysis = state.coach.current;
-  const reviewDone = Object.values(state.review.completed).every(Boolean) && Boolean(state.review.reflection.trim());
+  const reviewDone = isReviewComplete(state.review.completed, state.review.focus);
   const scores = useMemo(() => analysis ? getFoundationScores(analysis, state.coach.calibration, state.coach.tonalityRating) : [], [analysis, state.coach.calibration, state.coach.tonalityRating]);
   const trainingPlan = useMemo(() => buildTrainingPlan(scores), [scores]);
 

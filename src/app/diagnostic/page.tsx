@@ -63,7 +63,7 @@ export default function DiagnosticPage() {
       update((current) => ({
         ...current,
         diagnostic: { recordedAt: now, durationSeconds: capture.durationSeconds, lockedUntil, transcript: transcriptRef.current, transcriptSegments: transcriptSegmentsRef.current, hasRecording: true },
-        review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, reflection: "" },
+        review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, whatWorked: "", focus: null, reflection: "" },
         coach: { ...current.coach, current: null },
       }));
       setPhase("locked");
@@ -176,7 +176,7 @@ export default function DiagnosticPage() {
       update((current) => ({
         ...current,
         diagnostic: { recordedAt: recoveryDraft.startedAt, durationSeconds: recoveryDraft.durationSeconds, lockedUntil, transcript: "", transcriptSegments: [], hasRecording: true },
-        review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, reflection: "" },
+        review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, whatWorked: "", focus: null, reflection: "" },
         coach: { ...current.coach, current: null },
       }));
       setPhase("locked");
@@ -188,7 +188,7 @@ export default function DiagnosticPage() {
   async function startFresh(): Promise<void> {
     if (!window.confirm("Delete the current baseline and its review so you can record a fresh take?")) return;
     await Promise.all([deleteRecording(), discardRecoveryDraft()]);
-    update((current) => ({ ...current, diagnostic: { recordedAt: null, durationSeconds: null, lockedUntil: null, transcript: "", transcriptSegments: [], hasRecording: false }, review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, reflection: "" }, coach: { ...current.coach, current: null } }));
+    update((current) => ({ ...current, diagnostic: { recordedAt: null, durationSeconds: null, lockedUntil: null, transcript: "", transcriptSegments: [], hasRecording: false }, review: { completed: { audio: false, visual: false, transcript: false }, ratings: {}, behaviorTags: [], behaviorOther: "", noBehaviorNoticed: false, whatWorked: "", focus: null, reflection: "" }, coach: { ...current.coach, current: null } }));
     setLiveTranscript("");
     setPhase("setup");
   }

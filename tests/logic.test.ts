@@ -4,7 +4,13 @@ import { buildTrainingPlan, type FoundationScore } from "../src/lib/coach";
 import { findTenseFlags } from "../src/lib/esl";
 import { hydrateState } from "../src/lib/storage/state";
 import { getTranscriptMetrics } from "../src/lib/transcript";
-import { isAudioReviewReady } from "../src/lib/review";
+import {
+  canOpenReviewStep,
+  isAudioReviewReady,
+  isReviewComplete,
+  nextReviewStep,
+  suggestFocusCategories,
+} from "../src/lib/review";
 import { normalizeIntentions } from "../src/lib/intentions";
 
 test("a fixed 100-word, 60-second passage reports 100 WPM", () => {
@@ -35,6 +41,43 @@ test("intentions are optional, trimmed, deduplicated, and capped at five", () =>
   assert.deepEqual(normalizeIntentions([" Clear ", "clear", "warm", "calm", "credible", "concise", "extra"]), ["Clear", "warm", "calm", "credible", "concise"]);
 });
 
+test("review steps unlock in order and completion requires one saved focus", () => {
+  const none = { audio: false, visual: false, transcript: false };
+  const audio = { ...none, audio: true };
+  const visual = { ...audio, visual: true };
+  const all = { ...visual, transcript: true };
+
+  assert.equal(canOpenReviewStep("audio", none), true);
+  assert.equal(canOpenReviewStep("visual", none), false);
+  assert.equal(canOpenReviewStep("visual", audio), true);
+  assert.equal(canOpenReviewStep("transcript", audio), false);
+  assert.equal(canOpenReviewStep("focus", visual), false);
+  assert.equal(canOpenReviewStep("focus", all), true);
+  assert.equal(nextReviewStep(none), "audio");
+  assert.equal(nextReviewStep(audio), "visual");
+  assert.equal(nextReviewStep(visual), "transcript");
+  assert.equal(nextReviewStep(all), "focus");
+  assert.equal(isReviewComplete(all, null), false);
+  assert.equal(isReviewComplete(all, { category: "pause", customCategory: "", action: "Pause after each main idea." }), true);
+});
+
+test("focus suggestions are derived from the completed review evidence", () => {
+  assert.deepEqual(suggestFocusCategories({
+    metrics: { words: 180, wpm: 180, nonWords: 2, fillers: 3 },
+    visualObservations: 1,
+    tonalityRating: 2,
+    averagePauseSeconds: null,
+    speechRatio: null,
+  }), ["pace", "voice", "visual"]);
+  assert.deepEqual(suggestFocusCategories({
+    metrics: { words: 0, wpm: 0, nonWords: 0, fillers: 0 },
+    visualObservations: 0,
+    tonalityRating: null,
+    averagePauseSeconds: null,
+    speechRatio: null,
+  }), ["voice", "structure"]);
+});
+
 test("legacy and malformed state hydrates into bounded version-two state", () => {
   const state = hydrateState({
     version: 1,
@@ -49,8 +92,26 @@ test("legacy and malformed state hydrates into bounded version-two state", () =>
   assert.equal(state.review.ratings.clear, 5);
   assert.equal(state.review.completed.audio, true);
   assert.equal(state.review.completed.visual, false);
+  assert.equal(state.review.focus, null);
   assert.equal(state.gym.streak, 0);
   assert.equal(state.coach.current, null);
+});
+
+test("a valid single focus survives hydration while incomplete focus data is rejected", () => {
+  const state = hydrateState({
+    version: 2,
+    review: {
+      completed: { audio: true, visual: true, transcript: true },
+      whatWorked: "The opening was direct.",
+      focus: { category: "pause", customCategory: "", action: "  Pause after each main idea.  " },
+    },
+  });
+  assert.deepEqual(state.review.focus, {
+    category: "pause",
+    customCategory: "",
+    action: "Pause after each main idea.",
+  });
+  assert.equal(hydrateState({ review: { focus: { category: "custom", action: "Look up more often." } } }).review.focus, null);
 });
 
 test("the training plan ranks measurable weak foundations before missing metrics", () => {

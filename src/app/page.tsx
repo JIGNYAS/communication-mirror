@@ -5,6 +5,8 @@ import { ArrowRight, Check, Clock3, LockKeyhole, ShieldCheck } from "lucide-reac
 import { AppShell } from "@/components/AppShell";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useLocalState } from "@/hooks/useLocalState";
+import { getFocusCategoryLabel, isReviewComplete } from "@/lib/review";
+import type { FocusSelection, ReviewCompletion } from "@/types/review";
 
 interface HomeAction {
   eyebrow: string;
@@ -16,7 +18,8 @@ interface HomeAction {
 
 const methodSteps = ["Record", "Wait", "Review", "Improve"];
 
-function getHomeAction(hasRecording: boolean, locked: boolean, completedPasses: number, reviewComplete: boolean): HomeAction {
+function getHomeAction(hasRecording: boolean, locked: boolean, completed: ReviewCompletion, focus: FocusSelection | null): HomeAction {
+  const completedPasses = Object.values(completed).filter(Boolean).length;
   if (!hasRecording) {
     return {
       eyebrow: "Your next step",
@@ -35,12 +38,12 @@ function getHomeAction(hasRecording: boolean, locked: boolean, completedPasses: 
       step: 1,
     };
   }
-  if (!reviewComplete) {
+  if (!isReviewComplete(completed, focus)) {
     return {
-      eyebrow: completedPasses ? `${completedPasses} of 3 review passes complete` : "Your take is ready",
-      label: completedPasses ? "Continue your review" : "Begin your review",
+      eyebrow: completedPasses === 3 ? "Three review passes complete" : completedPasses ? `${completedPasses} of 3 review passes complete` : "Your take is ready",
+      label: completedPasses === 3 ? "Choose one focus" : completedPasses ? "Continue your review" : "Begin your review",
       href: "/review",
-      note: "Listen, watch, and read separately so each channel reveals different evidence.",
+      note: completedPasses === 3 ? "Turn what you noticed into one specific action for the next take." : "Listen, watch, and read separately so each channel reveals different evidence.",
       step: 2,
     };
   }
@@ -48,7 +51,7 @@ function getHomeAction(hasRecording: boolean, locked: boolean, completedPasses: 
     eyebrow: "Review complete",
     label: "Practice your one change",
     href: "/gym",
-    note: "Carry one specific observation into a short practice rep.",
+    note: focus?.action ?? "Carry one specific observation into a short practice rep.",
     step: 3,
   };
 }
@@ -56,9 +59,8 @@ function getHomeAction(hasRecording: boolean, locked: boolean, completedPasses: 
 export default function HomePage() {
   const { state, storageError } = useLocalState();
   const remaining = useCountdown(state.diagnostic.lockedUntil);
-  const completedPasses = Object.values(state.review.completed).filter(Boolean).length;
-  const reviewComplete = completedPasses === 3 && Boolean(state.review.reflection.trim());
-  const action = getHomeAction(state.diagnostic.hasRecording, remaining > 0, completedPasses, reviewComplete);
+  const reviewComplete = isReviewComplete(state.review.completed, state.review.focus);
+  const action = getHomeAction(state.diagnostic.hasRecording, remaining > 0, state.review.completed, state.review.focus);
 
   return (
     <AppShell active="home" tone="light">
@@ -75,12 +77,21 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="take-marker" aria-label="One five-minute take">
-          <div className="take-marker-top"><span className="record-pulse" /> ONE TAKE</div>
-          <strong>5:00</strong>
-          <p>No restart. No performance. Just evidence.</p>
-          <div className="take-line" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
-        </div>
+        {reviewComplete && state.review.focus ? (
+          <div className="focus-marker" aria-label="Your focus for the next take">
+            <div className="focus-marker-top"><span>ONE FOCUS</span><Check size={17} /></div>
+            <p>{getFocusCategoryLabel(state.review.focus.category, state.review.focus.customCategory)}</p>
+            <strong>{state.review.focus.action}</strong>
+            <Link href="/gym">Practice this focus <ArrowRight size={16} /></Link>
+          </div>
+        ) : (
+          <div className="take-marker" aria-label="One five-minute take">
+            <div className="take-marker-top"><span className="record-pulse" /> ONE TAKE</div>
+            <strong>5:00</strong>
+            <p>No restart. No performance. Just evidence.</p>
+            <div className="take-line" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
+          </div>
+        )}
       </section>
 
       <ol className="method-line" aria-label="The four-step Mirror method">

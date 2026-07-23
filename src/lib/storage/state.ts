@@ -21,6 +21,8 @@ export const INITIAL_STATE: MirrorState = {
     behaviorTags: [],
     behaviorOther: "",
     noBehaviorNoticed: false,
+    whatWorked: "",
+    focus: null,
     reflection: "",
   },
   gym: {
@@ -132,11 +134,27 @@ function profileColor(value: unknown): ProfileColor | null {
   return value === "red" || value === "yellow" || value === "green" || value === "blue" ? value : null;
 }
 
+function focusCategory(value: unknown): import("@/types/review").FocusCategory | null {
+  return value === "pace"
+    || value === "pause"
+    || value === "voice"
+    || value === "visual"
+    || value === "language"
+    || value === "structure"
+    || value === "custom"
+    ? value
+    : null;
+}
+
 export function hydrateState(value: unknown): MirrorState {
   if (!isRecord(value)) return INITIAL_STATE;
   const diagnostic = isRecord(value.diagnostic) ? value.diagnostic : {};
   const review = isRecord(value.review) ? value.review : {};
   const completed = isRecord(review.completed) ? review.completed : {};
+  const focus = isRecord(review.focus) ? review.focus : {};
+  const hydratedFocusCategory = focusCategory(focus.category);
+  const focusAction = typeof focus.action === "string" ? focus.action.trim() : "";
+  const customCategory = typeof focus.customCategory === "string" ? focus.customCategory.trim() : "";
   const gym = isRecord(value.gym) ? value.gym : {};
   const framework = isRecord(gym.framework) ? gym.framework : {};
   const coach = isRecord(value.coach) ? value.coach : {};
@@ -171,6 +189,14 @@ export function hydrateState(value: unknown): MirrorState {
       behaviorTags: strings(review.behaviorTags, 20),
       behaviorOther: typeof review.behaviorOther === "string" ? review.behaviorOther : "",
       noBehaviorNoticed: review.noBehaviorNoticed === true,
+      whatWorked: typeof review.whatWorked === "string"
+        ? review.whatWorked
+        : typeof review.reflection === "string"
+          ? review.reflection
+          : "",
+      focus: hydratedFocusCategory && focusAction && (hydratedFocusCategory !== "custom" || customCategory)
+        ? { category: hydratedFocusCategory, customCategory, action: focusAction }
+        : null,
       reflection: typeof review.reflection === "string" ? review.reflection : "",
     },
     gym: {
