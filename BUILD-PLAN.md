@@ -82,7 +82,7 @@ State model (localStorage, versioned key `mirror-state-v1`): goals (5 words), di
 
 **6. Data ownership**: settings section with JSON backup/restore and "download my video" (port from prototype `App.tsx:599-612`), plus delete-everything.
 
-## Phase 2 — On-device Coach (after Phase 1 is deployed and witnessed)
+## Phase 2 — On-device Coach (after Phase 1 is deployed)
 
 - `/calibration`: record 10s baseline at conversational volume; store RMS baseline ("Level 3"); define "Level 5" target.
 - `src/lib/audio/analysis.ts`: decode the saved recording via `AudioContext.decodeAudioData` and compute — WPM over time (with transcript timestamps), volume vs. baseline, pause map (silences > 700ms = "white space" vs. rambling), pitch median + variance via autocorrelation (flag monotone), best-effort uptalk detection (rising pitch slope in the last ~500ms of utterances) — label it "experimental".
@@ -102,7 +102,7 @@ State model (localStorage, versioned key `mirror-state-v1`): goals (5 words), di
 3. Permission-denial path: block camera in site settings → verify helpful message, no crash.
 4. Firefox/Safari: recording works, transcription gracefully absent, manual transcript path works.
 5. Refresh mid-flow: state persists (localStorage), video retrievable (IndexedDB).
-6. Deploy to Vercel (`/deploy-runbook`), then run `/ship-it`: README a stranger can skim + shown to 2 real people. **Phase 1 is not "done" until witnessed.**
+6. Deploy to Vercel (`/deploy-runbook`).
 
 ## Notes for the builder (Codex GPT 5.6)
 
