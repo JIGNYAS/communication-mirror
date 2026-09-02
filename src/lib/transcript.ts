@@ -20,10 +20,3 @@ export function getTranscriptMetrics(text: string, durationSeconds: number | nul
   };
 }
 
-export function classifyToken(token: string): "non-word" | "filler" | undefined {
-  const normalized = token.toLowerCase().replace(/[^a-z'-]/g, "");
-  if (NON_WORDS.includes(normalized)) return "non-word";
-  if (FILLER_PHRASES.includes(normalized)) return "filler";
-  return undefined;
-}
-

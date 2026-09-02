@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -45,6 +45,10 @@ interface FocusDraft {
   action: string;
 }
 
+const subscribeToUnlockParam = () => () => undefined;
+const developmentUnlockRequested = () => process.env.NODE_ENV === "development" && window.location.search.includes("unlock");
+const developmentUnlockUnavailable = () => false;
+
 function formatCountdown(milliseconds: number): string {
   const seconds = Math.ceil(milliseconds / 1000);
   const hours = Math.floor(seconds / 3600);
@@ -59,11 +63,10 @@ export default function ReviewPage() {
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const [recordingError, setRecordingError] = useState("");
   const [focusDraft, setFocusDraft] = useState<FocusDraft | null>(null);
-  const [developmentUnlock, setDevelopmentUnlock] = useState(
-    () => process.env.NODE_ENV === "development" && typeof window !== "undefined" && window.location.search.includes("unlock"),
-  );
+  const [developmentUnlock, setDevelopmentUnlock] = useState(false);
+  const unlockRequested = useSyncExternalStore(subscribeToUnlockParam, developmentUnlockRequested, developmentUnlockUnavailable);
   const remaining = useCountdown(state.diagnostic.lockedUntil);
-  const locked = remaining > 0 && !developmentUnlock;
+  const locked = remaining > 0 && !developmentUnlock && !unlockRequested;
   const metrics = useMemo(
     () => getTranscriptMetrics(state.diagnostic.transcript, state.diagnostic.durationSeconds),
     [state.diagnostic.durationSeconds, state.diagnostic.transcript],
@@ -128,16 +131,24 @@ export default function ReviewPage() {
   );
 
   useEffect(() => {
+    let active = true;
     let url = "";
     getRecording().then((blob) => {
       if (!blob) {
-        setRecordingError("The saved video is missing from this browser. Start a fresh recording to continue.");
+        if (active) setRecordingError("The saved video is missing from this browser. Start a fresh recording to continue.");
         return;
       }
       url = URL.createObjectURL(blob);
+      if (!active) {
+        URL.revokeObjectURL(url);
+        return;
+      }
       setRecordingUrl(url);
-    }).catch(() => setRecordingError("The saved video could not be opened from browser storage."));
-    return () => { if (url) URL.revokeObjectURL(url); };
+    }).catch(() => { if (active) setRecordingError("The saved video could not be opened from browser storage."); });
+    return () => {
+      active = false;
+      if (url) URL.revokeObjectURL(url);
+    };
   }, []);
 
   function completeMode(target: ReviewMode): void {

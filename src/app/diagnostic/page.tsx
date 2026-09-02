@@ -37,7 +37,7 @@ export default function DiagnosticPage() {
   const [recoveryBlob, setRecoveryBlob] = useState<Blob | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const elapsedRef = useRef(0);
+  const recordingStartedAtRef = useRef(0);
   const transcriptRef = useRef(state.diagnostic.transcript);
   const transcriptSegmentsRef = useRef<TranscriptSegment[]>(state.diagnostic.transcriptSegments);
   const stopTranscriptionRef = useRef<() => void>(() => undefined);
@@ -90,9 +90,9 @@ export default function DiagnosticPage() {
   useEffect(() => {
     if (activePhase !== "recording") return;
     const interval = window.setInterval(() => {
-      elapsedRef.current += 1;
-      setElapsed(elapsedRef.current);
-      if (elapsedRef.current >= DIAGNOSTIC_SECONDS) void finishRecording();
+      const seconds = Math.floor((Date.now() - recordingStartedAtRef.current) / 1000);
+      setElapsed(seconds);
+      if (seconds >= DIAGNOSTIC_SECONDS) void finishRecording();
     }, 1000);
     const warn = (event: BeforeUnloadEvent) => {
       requestDraftFlush();
@@ -149,9 +149,9 @@ export default function DiagnosticPage() {
     setRecoveryBlob(null);
     setPromptIndex(0);
     setElapsed(0);
-    elapsedRef.current = 0;
     try {
       await startRecording(streamRef.current);
+      recordingStartedAtRef.current = Date.now();
       transcriptRef.current = liveTranscript;
       transcriptSegmentsRef.current = [];
       if (transcriptionOptIn && transcriptionAvailable) {
